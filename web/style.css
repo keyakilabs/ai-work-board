@@ -1,0 +1,948 @@
+/*
+ * 認知負荷を下げることが、この画面の唯一の仕事。
+ *
+ * だから、一度に見せるものを1つに絞る。落ち着いた背景に、明るい紙が1枚だけ
+ * 浮いている。それ以外は要るときまで畳む。飾りは足さない — 飾りも情報なので、
+ * 読む対象が増える。
+ */
+
+:root {
+  /*
+   * 白と黒が地。色は Keyaki Labs の2色だけを差し色に使い、意味を固定する。
+   *
+   *   テラコッタ  = あなたの手が要る（至急・回答するボタン・ターミナルで入力待ち）
+   *   青鈍        = 相手の番／動いている（Claude の番・作業中）
+   *   それ以外    = 白黒
+   *
+   * 色の種類を増やすと、色そのものが読む対象になる。この画面の仕事は
+   * 認知負荷を下げることなので、覚える色は2つまでにする。
+   */
+
+  /* 部屋（画面の地）。紙を浮かせるぶんだけ白から沈ませる */
+  --bg: #e9e9e9;
+  --bg-2: #f2f2f2;
+
+  /* 紙 */
+  --paper: #ffffff;
+  --paper-2: #f7f7f7;
+
+  --ink: #1a1a1a;
+  --ink-2: #4d4d4d;
+  --ink-3: #767676;
+  --line: #e8e8e8;
+  --line-2: #d4d4d4;
+
+  /* 差し色。keyaki-labs.com / ai-usage-board と同じ値 */
+  --accent: #a3432b;
+  --accent-strong: #7c3320;
+  --accent-soft: #f7ebe6;
+  --accent-ink: #ffffff;
+  --accent-2: #4a6670;
+  --accent-2-soft: #eef2f3;
+
+  /* 意味づけ。新しい色は足さず、上の2色と白黒に寄せる */
+  --wait: var(--accent-2);
+  --wait-soft: var(--accent-2-soft);
+  --go: #5b5b5b;
+  --go-soft: #f1f1f1;
+  /* 失敗だけは別の色を残す。「急ぎ」と「壊れている」を取り違えさせない */
+  --bad: #b3261e;
+  --bad-soft: #fceceb;
+
+  /* 部屋の上に乗る文字と罫 */
+  --room-ink: #2b2b2b;
+  --room-ink-2: #636363;
+  --room-line: #dadada;
+
+  /* 線画の色 */
+  --ill-line: var(--ink-2);
+  --ill-body: #ffffff;
+  --ill-paper: #ffffff;
+  --ill-mark: var(--accent);
+
+  --rack-w: 84px;
+  --r: 12px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .09);
+  --ui: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+
+/*
+ * 暗い画面。
+ *
+ * 地を白黒から黒白へ裏返すだけで、色の意味づけ（テラコッタ＝あなたの手が
+ * 要る／青鈍＝相手の番）は変えない。差し色は暗い地だと沈むので、同じ色相の
+ * まま明度を上げている。茶色く見えないよう、グレーは色みを持たせていない。
+ *
+ * OS の設定だけで切り替える。手で切り替えるスイッチは置いていないので、
+ * 値の置き場はここ1つだけ — 2箇所に書くと必ず片方だけ直して食い違う。
+ */
+/*
+ * 暗い画面の値。置き場はここ1つだけ。
+ *
+ * 下の「当てるところ」が2つあるのは、OS の設定で決まる場合と、
+ * 画面のスイッチで決めた場合の両方を拾うため。値をそちらに書くと
+ * 必ず片方だけ直して食い違うので、値はここから動かさない。
+ * （2つの当てるところが同じ顔ぶれかは test/theme.test.mjs が機械で見ている）
+ */
+:root {
+  --d-bg: #141414;
+  --d-bg-2: #1e1e1e;
+
+  /* 紙は「暗いカード」にする。暗い部屋に白い紙を置くと眩しい */
+  --d-paper: #202020;
+  --d-paper-2: #292929;
+
+  --d-ink: #ededed;
+  --d-ink-2: #bdbdbd;
+  --d-ink-3: #8a8a8a;
+  --d-line: #2f2f2f;
+  --d-line-2: #3d3d3d;
+
+  /* 同じ色相のまま明度を上げる。#a3432b のままだと地に沈んで読めない */
+  --d-accent: #cf6f4a;
+  --d-accent-strong: #e08a67;
+  --d-accent-soft: #38231b;
+  --d-accent-ink: #1c1008;
+  --d-accent-2: #7fa0ad;
+  --d-accent-2-soft: #1d2a30;
+
+  --d-go: #9a9a9a;
+  --d-go-soft: #262626;
+  --d-bad: #e5736a;
+  --d-bad-soft: #321b19;
+
+  --d-room-ink: #e4e4e4;
+  --d-room-ink-2: #9a9a9a;
+  --d-room-line: #2f2f2f;
+
+  /* 線画。体は部屋より少しだけ明るくして、腕の筒が抜けるようにする */
+  --d-ill-body: #262626;
+  --d-ill-paper: #e6e6e6;
+
+  --d-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 14px 38px rgba(0, 0, 0, .55);
+}
+
+/* 当てるところ その1: OS が暗いとき（画面で「明るい」を選んでいなければ） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: var(--d-bg);
+    --bg-2: var(--d-bg-2);
+    --paper: var(--d-paper);
+    --paper-2: var(--d-paper-2);
+    --ink: var(--d-ink);
+    --ink-2: var(--d-ink-2);
+    --ink-3: var(--d-ink-3);
+    --line: var(--d-line);
+    --line-2: var(--d-line-2);
+    --accent: var(--d-accent);
+    --accent-strong: var(--d-accent-strong);
+    --accent-soft: var(--d-accent-soft);
+    --accent-ink: var(--d-accent-ink);
+    --accent-2: var(--d-accent-2);
+    --accent-2-soft: var(--d-accent-2-soft);
+    --go: var(--d-go);
+    --go-soft: var(--d-go-soft);
+    --bad: var(--d-bad);
+    --bad-soft: var(--d-bad-soft);
+    --room-ink: var(--d-room-ink);
+    --room-ink-2: var(--d-room-ink-2);
+    --room-line: var(--d-room-line);
+    --ill-body: var(--d-ill-body);
+    --ill-paper: var(--d-ill-paper);
+    --shadow: var(--d-shadow);
+    color-scheme: dark;
+  }
+}
+
+/* 当てるところ その2: 画面のスイッチで「暗い」を選んだとき */
+:root[data-theme="dark"] {
+    --bg: var(--d-bg);
+    --bg-2: var(--d-bg-2);
+    --paper: var(--d-paper);
+    --paper-2: var(--d-paper-2);
+    --ink: var(--d-ink);
+    --ink-2: var(--d-ink-2);
+    --ink-3: var(--d-ink-3);
+    --line: var(--d-line);
+    --line-2: var(--d-line-2);
+    --accent: var(--d-accent);
+    --accent-strong: var(--d-accent-strong);
+    --accent-soft: var(--d-accent-soft);
+    --accent-ink: var(--d-accent-ink);
+    --accent-2: var(--d-accent-2);
+    --accent-2-soft: var(--d-accent-2-soft);
+    --go: var(--d-go);
+    --go-soft: var(--d-go-soft);
+    --bad: var(--d-bad);
+    --bad-soft: var(--d-bad-soft);
+    --room-ink: var(--d-room-ink);
+    --room-ink-2: var(--d-room-ink-2);
+    --room-line: var(--d-room-line);
+    --ill-body: var(--d-ill-body);
+    --ill-paper: var(--d-ill-paper);
+    --shadow: var(--d-shadow);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+/* フォーカス枠はブラウザ既定の青ではなく、この画面の色で出す */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.shelf:focus, .shelf:focus-visible { outline: none; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% -10%, var(--bg-2), var(--bg) 62%);
+  color: var(--room-ink);
+  font: 15px/1.7 var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ───────────────── 線画 ─────────────────
+ * 色と線の太さは、絵の中に書かずにここで当てる。
+ * この画面は style-src 'self' で動いていて、`style="fill:…"` のような
+ * 属性はブラウザに弾かれる（art.mjs の頭に経緯を書いてある）。
+ */
+
+.art { fill: none; stroke: var(--ill-line); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.art .body { fill: var(--ill-body); }
+.art .paper { fill: var(--ill-paper); stroke-width: 2.6; }
+.art .solid { fill: var(--ill-line); stroke: none; }
+.art .dot { fill: var(--ill-mark); stroke: none; }
+.art .mark { stroke: var(--ill-mark); stroke-width: 2.6; }
+.art .filled-mark { fill: var(--ill-mark); stroke: var(--ill-mark); }
+.art .thin { stroke-width: 2.2; }
+.art .mid { stroke-width: 2.6; }
+.art .bold { stroke-width: 3.4; }
+/* 腕は「太い外線 + 細い内側」の2本重ねで筒に見せる */
+.art .arm { stroke-width: 10.4; }
+.art .arm-in { stroke: var(--ill-body); stroke-width: 4.4; }
+
+/* ───────────────── 部屋 ─────────────────
+ * 左に係、真ん中に紙が1枚、右に棚。上の帯は置かない —
+ * 「いま何件あなた待ちか」は帯ではなく係が言うので、読む対象を増やさない。
+ */
+
+.room { position: fixed; inset: 0; }
+
+.stage {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(6px, 1.4vw, 22px);
+  padding:
+    clamp(12px, 2.2vh, 26px)
+    calc(var(--rack-w) + clamp(10px, 1.6vw, 24px))
+    clamp(12px, 2.4vh, 24px)
+    clamp(10px, 1.6vw, 24px);
+  outline: none;
+}
+
+/* ───────────────── 係 ─────────────────
+ * 紙を運んでくる人。姿勢で状態を出して、文字は確認に回す。
+ * 押すと、いま言っていることの現物へ飛ぶ。
+ */
+
+/* ひとことが 1〜2 行に収まる幅。ここが狭いと、11文字の行が
+   「〜くださ / い」のように割れて、読む手間だけが増える */
+.bot-slot { flex: 0 0 auto; align-self: center; width: clamp(168px, 14vw, 204px); }
+
+.bot-side {
+  display: flex; flex-direction: column-reverse; align-items: center; gap: 6px;
+  width: 100%; padding: 0; border: 0; background: transparent;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.bot-side:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 14px; }
+
+.bot-art { width: clamp(98px, 9vw, 130px); height: auto; aspect-ratio: 1 / 1; display: block; }
+/* 歩いてくる本人が別に出ている間は、立ち位置を空けておく */
+.bot-art.away { visibility: hidden; }
+
+.bot-bubble {
+  position: relative; width: 100%;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--line-2); border-radius: 12px;
+  padding: 8px 11px; box-shadow: var(--shadow);
+  font-size: 12px; line-height: 1.55;
+}
+.bot-bubble::before {
+  content: ''; position: absolute; left: 50%; bottom: -5px; margin-left: -5px;
+  width: 9px; height: 9px; background: var(--paper);
+  border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+  transform: rotate(45deg);
+}
+.bot-line { display: block; font-weight: 700; word-break: break-word; }
+.bot-sub { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink-3); word-break: break-word; }
+.bot-side:hover:not(:disabled) .bot-bubble,
+.bot-side:hover:not(:disabled) .bot-bubble::before { border-color: var(--accent); }
+
+/* 押すと何が起きるか。これが無いと、ただの飾りだと思われて押されない */
+.bot-go { display: block; margin-top: 5px; font-size: 11px; font-weight: 650; color: var(--accent); }
+/* 連れていく先が無いときは押せない。見た目が変わらないボタンを押させない */
+.bot-side:disabled { cursor: default; }
+
+/* 手を止めてほしいときだけ色を変える。ふだんは紙と同じ白のまま */
+.bot-side[data-tone="hot"] .bot-bubble, .bot-side[data-tone="hot"] .bot-bubble::before { border-color: var(--bad); }
+.bot-side[data-tone="hot"] .bot-line { color: var(--bad); }
+.bot-side[data-tone="done"] .bot-bubble, .bot-side[data-tone="done"] .bot-bubble::before { background: var(--paper-2); }
+
+/* 息づかいだけ。1日中開けたままにするので、触っていない間は止まる */
+@keyframes bot-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+.bot-side .bot-art:not(.away) { animation: bot-breathe 3.2s ease-in-out infinite; }
+.bot-side[data-pose="sleep"] .bot-art { animation-duration: 5s; }
+html.still .bot-art { animation: none; }
+
+/* ───────────────── 紙の置き場 ───────────────── */
+
+.sheet-area {
+  flex: 1 1 auto; min-width: 0; max-width: 760px; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+}
+.paper-slot {
+  width: 100%; min-height: 0; flex: 0 1 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 紙送り。前 / 何枚目 / 次。これ以外の一覧は画面に出さない */
+.pager { flex: none; display: flex; align-items: center; gap: 4px; }
+.pager[hidden] { display: none; }
+.pg {
+  width: 30px; height: 30px; font: 17px/1 var(--ui); cursor: pointer;
+  background: transparent; border: 1px solid var(--room-line);
+  color: var(--room-ink-2); border-radius: 8px;
+}
+.pg:hover:not(:disabled) { color: var(--room-ink); border-color: var(--room-ink-2); }
+.pg:disabled { opacity: .3; cursor: default; }
+.pg-pos { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--room-ink-2); padding: 0 8px; }
+
+/* ───────────────── 棚 ─────────────────
+ * 右に立てて、ふだんは絵と数字だけ。名前はマウスを乗せたときと
+ * タブで入ったときだけ出す。一覧は要るときに開くもので、
+ * 常時7つの名前が並んでいると、そこも読む対象になる。
+ */
+
+.rack {
+  position: absolute; right: 0; top: 0; bottom: 0; z-index: 6;
+  width: var(--rack-w);
+  /* 開いたときに紙の上に重なるので、必ず不透明にする。
+     color-mix の割合の合計が 100% に満たないと、足りないぶんが透明度になって
+     後ろの紙が薄く透ける（0.94 で透けていた） */
+  background: color-mix(in srgb, var(--bg-2) 94%, var(--room-ink));
+  border-left: 1px solid var(--room-line);
+  transition: width .14s ease;
+}
+.rack:hover, .rack:focus-within { width: 252px; box-shadow: -8px 0 22px rgba(0, 0, 0, .09); }
+.rack-inner { width: 100%; height: 100%; display: flex; flex-direction: column; padding: 13px 6px 10px; overflow: hidden; }
+
+.rack-group {
+  display: flex; flex-direction: column; gap: 2px;
+  padding-bottom: 9px; margin-bottom: 9px;
+  /* 罫は地の色から引く。白ベースにしたとき `--room-line` では薄すぎて
+     区切りが見えず、8つの札がひと続きの一覧に見えていた */
+  border-bottom: 1px solid color-mix(in srgb, var(--room-ink) 22%, transparent);
+}
+.rack-group:last-of-type { border-bottom: 0; }
+
+/* まとまりの名前。畳んでいる間は場所を取らない */
+.rg-label {
+  height: 0; overflow: hidden; opacity: 0;
+  font-size: 10.5px; letter-spacing: .04em; color: var(--room-ink-2);
+  padding: 0 8px;
+}
+.rack:hover .rg-label, .rack:focus-within .rg-label {
+  height: auto; opacity: 1; padding: 2px 8px 5px;
+}
+
+.rack-item {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; height: 44px; padding: 0 7px;
+  border: 0; border-radius: 10px; background: transparent;
+  color: var(--room-ink-2); font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+}
+.rack-item:hover { background: color-mix(in srgb, var(--room-ink) 10%, transparent); color: var(--room-ink); }
+.rack-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.rack-item.hot { color: var(--accent); }
+
+.ri { width: 28px; height: 28px; flex: none; }
+/* 畳んでいる間、名前は場所を取らない。
+ * 幅0の要素でも flex の gap は入るので、そのままだと数字が枠からはみ出て
+ * 切れる（件数が読めないと棚の意味が無い）。流れから外して重ねておく */
+.rl {
+  position: absolute; left: 44px; right: 8px; opacity: 0; pointer-events: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rack:hover .rl, .rack:focus-within .rl {
+  position: static; flex: 1 1 auto; opacity: 1; pointer-events: auto;
+}
+.rn {
+  flex: none; min-width: 18px; text-align: right;
+  font-weight: 700; font-variant-numeric: tabular-nums; color: var(--room-ink);
+}
+.rk { display: none; }
+.rack:hover .rk, .rack:focus-within .rk {
+  display: inline-block; flex: none;
+  font: 10px/1 var(--mono); opacity: .5;
+  border: 1px solid currentColor; border-radius: 3px; padding: 2px 3px;
+}
+
+/* 畳んでいる間は点にする。名前が見えなくても「そこに何かある」は伝わる */
+/* 「あなたの手が要る」の印。色はテラコッタ1色に統一する —
+   至急と入力待ちで色を分けても、覚える色が増えるだけで意味は変わらない */
+.rtag {
+  position: absolute; left: 3px; top: 5px;
+  width: 8px; height: 8px; padding: 0; border-radius: 50%;
+  background: var(--accent); font-size: 0; line-height: 0; overflow: hidden;
+}
+.rack:hover .rtag, .rack:focus-within .rtag {
+  position: static; flex: none; width: auto; height: auto;
+  padding: 0 8px; border-radius: 999px;
+  font-size: 10.5px; line-height: 17px; font-weight: 700; color: var(--accent-ink);
+}
+
+.rack-foot {
+  margin: auto 0 0; padding: 9px 8px 0;
+  border-top: 1px solid var(--room-line);
+  font-size: 11px; color: var(--room-ink-2);
+  opacity: 0; visibility: hidden;
+}
+.rack:hover .rack-foot, .rack:focus-within .rack-foot { opacity: 1; visibility: visible; }
+.rf-name { display: block; color: var(--room-ink); }
+.rf-where {
+  display: block; font-family: var(--mono); font-size: 10px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ───────────────── 配達の層 ─────────────────
+ * 歩いてくる係と、飛んでいく紙だけがここに出る。押せない・読まれない。
+ */
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 70; }
+.fx-bot, .fx-sheet { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.fx-bot svg, .fx-sheet svg { width: 100%; height: 100%; display: block; }
+.fx-sheet { width: 44px; height: 55px; }
+.fx-sheet.hot { --ill-line: var(--bad); --ill-mark: var(--bad); }
+
+/* 1枚の紙。これが画面の主役で、ほかは全部これを邪魔しないためにある。
+ * 中身ぶんの高さに収め、長い相談のときだけ本文側がスクロールする。
+ * 短い相談で紙が間延びすると、目が行き場を失う。 */
+.sheet {
+  width: min(760px, 100%);
+  max-height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.sheet-scroll { overflow-y: auto; padding: 20px 26px 14px; min-height: 5em; flex: 1 1 auto; }
+
+.sheet .kicker {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+  margin-bottom: 10px;
+}
+
+.sheet h1 {
+  margin: 0 0 14px;
+  font-size: 21px; line-height: 1.5; font-weight: 700;
+  letter-spacing: .01em; word-break: break-word;
+}
+
+.sheet .lede { font-size: 15px; line-height: 1.85; color: var(--ink-2); }
+
+/* 板の本文。Claude は md の癖で見出しと箇条書きを書くので、読める形に組む */
+.p, .turn-body .p, .text .p { margin: 0 0 10px; white-space: pre-wrap; word-break: break-word; }
+.p:last-child { margin-bottom: 0; }
+.h {
+  margin: 16px 0 7px; font-size: 14px; font-weight: 700; color: var(--ink);
+  letter-spacing: .01em;
+}
+.h:first-child { margin-top: 0; }
+.ul { margin: 0 0 10px; padding-left: 1.35em; }
+.ul li { margin: 0 0 4px; word-break: break-word; }
+.ul:last-child { margin-bottom: 0; }
+strong { color: var(--ink); font-weight: 650; }
+.hr { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
+.text code, .lede code, .turn-body code {
+  font-family: var(--mono); font-size: .88em;
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px;
+}
+
+/* 答える場所。読んだ流れのまま手が届くよう、紙の下に貼り付ける */
+.answer {
+  flex: none;
+  max-height: 52%;            /* 本文が読める高さを必ず残す */
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+  background: var(--paper-2);
+  padding: 13px 26px 15px;
+}
+.answer .lead {
+  font-size: 12.5px; color: var(--ink-3); margin-bottom: 9px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.choices { display: flex; flex-direction: column; gap: 7px; }
+.choice {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  text-align: left; font: inherit; font-size: 14.5px;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--line-2); border-radius: 9px;
+  padding: 10px 13px; cursor: pointer;
+}
+/* ホバーは「触れている」だけ。塗りつぶすと、カードが差し替わった直後に
+ * カーソルが乗っている選択肢が「もう選んである」ように見えてしまう */
+@media (hover: hover) {
+  .choice:hover { border-color: var(--accent); }
+  .choice:hover .num { border-color: var(--accent); color: var(--accent); background: var(--paper-2); }
+}
+.choice:active { background: var(--accent-soft); border-color: var(--accent); }
+.choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.choice .num {
+  flex: none; width: 19px; height: 19px; border-radius: 5px;
+  display: grid; place-items: center;
+  font: 700 11px/1 var(--mono);
+  background: var(--paper-2); border: 1px solid var(--line-2); color: var(--ink-3);
+}
+
+.reply { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.reply textarea, .field input, .field textarea {
+  font: inherit; font-size: 14px; width: 100%;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--line-2); border-radius: 9px;
+  padding: 9px 12px; resize: vertical;
+}
+.reply textarea:focus, .field :is(input, textarea):focus {
+  outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent);
+}
+.reply .row { display: flex; align-items: center; gap: 10px; }
+.reply .hint { font-size: 12px; color: var(--ink-3); }
+
+/* ───────────────── 札 ───────────────── */
+
+.chip {
+  font-size: 11px; letter-spacing: .02em; line-height: 1.6;
+  padding: 1px 8px; border-radius: 5px;
+  border: 1px solid var(--line-2); color: var(--ink-2); background: var(--paper);
+}
+.chip.wait { border-color: var(--line-2); background: var(--paper-2); color: var(--ink-3); }
+.chip.go   { border-color: color-mix(in srgb, var(--go) 45%, var(--line-2)); background: var(--go-soft); color: var(--go); }
+.chip.me   { border-color: color-mix(in srgb, var(--accent) 45%, var(--line-2)); background: var(--accent-soft); color: var(--accent); }
+.chip.soft { border-style: dashed; color: var(--ink-3); }
+.chip.bad  { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+
+.unknown { color: var(--ink-3); font-style: italic; }
+
+/* 差し替わったことが目で分かるように、ひと呼吸だけ。
+ * 同じ位置に同じ見た目で瞬時に入れ替わると、連打で読んでいない質問に
+ * 答えてしまう */
+.sheet.swapping { animation: swap .28s ease-out; }
+/* 続けて叩かれて止めたとき、止まったことを目で分かるようにする */
+.sheet.nudge { animation: nudge .35s ease-out; }
+@keyframes nudge {
+  0%, 100% { transform: none; }
+  30% { transform: translateX(-4px); }
+  60% { transform: translateX(3px); }
+}
+@keyframes swap {
+  from { opacity: .3; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ───────────────── 空 ───────────────── */
+
+.clear-stage {
+  width: min(560px, 100%); margin: auto;
+  text-align: center; color: var(--room-ink-2);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.clear-stage .big { font-size: 19px; color: var(--room-ink); font-weight: 600; }
+.clear-stage .sub { font-size: 13.5px; line-height: 1.9; }
+/* 空の画面のボタンは暗い背景の上に乗る。紙の上用の配色のままだと沈む */
+.clear-stage button.quiet {
+  background: transparent; border-color: var(--room-line); color: var(--room-ink-2);
+  font-size: 13px; padding: 7px 15px;
+}
+.clear-stage button.quiet:hover { color: var(--room-ink); border-color: var(--room-ink-2); }
+
+.setup-hint {
+  width: 100%; text-align: left; margin-top: 4px;
+  border: 1px dashed color-mix(in srgb, var(--wait) 45%, var(--room-line));
+  border-radius: 10px; padding: 10px 13px;
+  font-size: 12.5px; line-height: 1.85; color: var(--room-ink-2);
+}
+.setup-hint code {
+  display: block; margin-top: 6px; font-family: var(--mono); font-size: 11.5px;
+  color: var(--room-ink); word-break: break-all;
+}
+
+.clear-stage .group { width: 100%; text-align: left; }
+.clear-stage .group + .group { margin-top: 10px; }
+.clear-stage .group-label { font-size: 11.5px; color: var(--room-ink-2); margin: 0 2px 5px; }
+.clear-stage .rows {
+  width: 100%; text-align: left; display: flex; flex-direction: column; gap: 1px;
+  border: 1px solid var(--room-line); border-radius: 10px; overflow: hidden;
+}
+.clear-stage .row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; font-size: 13px; background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+}
+.clear-stage .row .who { color: var(--room-ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clear-stage .row .where { margin-left: auto; }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--room-ink-2); }
+.dot.wait { background: var(--accent); }
+.dot.busy { background: var(--accent-2); }
+
+/* ───────────────── 棚（オーバーレイ）───────────────── */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(3px);
+  display: flex; flex-direction: column;
+  padding: 26px clamp(12px, 5vw, 48px) 26px;
+}
+.overlay[hidden] { display: none; }
+
+.shelf {
+  margin: 0 auto; width: min(1040px, 100%); max-height: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--paper); color: var(--ink);
+  border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden;
+}
+.shelf-head {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--paper-2);
+}
+.shelf-head h2 { margin: 0; font-size: 14.5px; font-weight: 700; }
+.shelf-head .tabs { display: flex; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; }
+.shelf-head .tabs button {
+  font: inherit; font-size: 13px; cursor: pointer;
+  background: transparent; border: 1px solid transparent; color: var(--ink-3);
+  border-radius: 7px; padding: 4px 11px;
+}
+.shelf-head .tabs button:hover { color: var(--ink); }
+.shelf-head .tabs button[aria-selected="true"] {
+  background: var(--paper); border-color: var(--line-2); color: var(--ink); font-weight: 650;
+}
+.shelf-head .close { margin-left: auto; }
+.shelf-head .close button {
+  font: inherit; font-size: 12.5px; cursor: pointer; color: var(--ink-3);
+  background: transparent; border: 1px solid var(--line-2); border-radius: 7px; padding: 4px 10px;
+}
+.shelf-body { overflow-y: auto; padding: 16px 18px 20px; }
+
+/* 並び順が読み取れることを優先する。段組みだと「新しい順」が列をまたいで
+ * 散り、どれが新しいのか読めなくなる */
+.items { display: flex; flex-direction: column; gap: 10px; }
+.items > * { max-width: 100%; }
+.item {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--paper);
+  padding: 11px 13px; min-width: 0;
+}
+.item.soft { background: var(--paper-2); border-style: dashed; }
+.item h3 { margin: 0 0 5px; font-size: 14px; line-height: 1.5; font-weight: 650; word-break: break-word; }
+.item .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.item .item .text {
+  font-size: 13px; color: var(--ink-2); word-break: break-word;
+  max-height: 11em; overflow: hidden;
+}
+.item .actions { display: flex; gap: 6px; margin-top: 8px; }
+
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.field .row { display: flex; gap: 8px; align-items: center; }
+
+button.go {
+  font: inherit; font-size: 13.5px; font-weight: 650; cursor: pointer;
+  background: var(--accent); border: 1px solid var(--accent); color: var(--accent-ink);
+  border-radius: 9px; padding: 8px 16px; white-space: nowrap;
+}
+button.go:hover { filter: brightness(1.07); }
+button.go:disabled { opacity: .5; cursor: default; filter: none; }
+button.quiet {
+  font: inherit; font-size: 12.5px; cursor: pointer;
+  background: transparent; border: 1px solid var(--line-2); color: var(--ink-2);
+  border-radius: 8px; padding: 5px 11px;
+}
+button.quiet:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 直近の指示は既定で伏せる。画面共有やスクリーンショットで漏れるため */
+.veil {
+  margin-top: 7px; font-size: 13px; color: var(--ink-3);
+  background: var(--paper-2); border: 1px dashed var(--line-2);
+  border-radius: 8px; padding: 6px 10px; cursor: pointer; user-select: none;
+}
+.veil:hover { border-color: var(--accent); color: var(--ink-2); }
+.veil.shown { cursor: default; color: var(--ink-2); border-style: solid; white-space: pre-wrap; }
+
+/* ───────────────── 出どころ ─────────────────
+ * 画面に出ているものが、ディスクのどのファイルなのか。
+ * 常時は畳むが、いつでも開ける。透明性と静けさは両立する。
+ */
+.source { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 7px; }
+.src-head {
+  display: flex; align-items: center; gap: 6px; width: 100%; text-align: left;
+  background: none; border: none; padding: 2px 0; cursor: pointer;
+  color: var(--ink-3); font: inherit; font-size: 11.5px;
+}
+.src-head:hover { color: var(--accent); }
+.src-head .caret { font-size: 9px; transition: transform .12s; }
+.source.open .src-head { color: var(--accent); }
+.source.open .caret { transform: rotate(90deg); }
+.src-path { font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.src-body:empty { display: none; }
+.src-note { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-3); margin: 7px 0 5px; }
+.src-note.bad { color: var(--bad); }
+.src-what { color: var(--ink-2); min-width: 7em; }
+.src-note code {
+  font-family: var(--mono); font-size: 11px; flex: 1; min-width: 0;
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px;
+  padding: 1px 5px; word-break: break-all; color: var(--ink-2);
+}
+button.tiny { font: inherit; font-size: 11px; padding: 2px 7px; cursor: pointer; background: transparent; border: 1px solid var(--line-2); border-radius: 5px; color: var(--ink-3); }
+button.tiny:hover { color: var(--accent); border-color: var(--accent); }
+pre.raw {
+  margin: 0; max-height: 330px; overflow: auto;
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; font-family: var(--mono); font-size: 11.5px; line-height: 1.6;
+  color: var(--ink-2); white-space: pre-wrap; word-break: break-word;
+}
+
+/* 片付けたものの一覧で、何と答えたかを一番読ませたい */
+.said {
+  display: flex; gap: 9px; align-items: baseline; margin: 2px 0 8px;
+  background: var(--go-soft); border: 1px solid color-mix(in srgb, var(--go) 30%, var(--line));
+  border-radius: 8px; padding: 6px 10px;
+}
+.said-label { flex: none; font-size: 11px; color: var(--go); font-weight: 650; }
+.said-text { font-size: 13.5px; color: var(--ink); word-break: break-word; }
+
+button.carry { margin-top: 10px; }
+
+.howto p { margin: 0 0 7px; font-size: 13px; color: var(--ink-2); line-height: 1.8; }
+.howto p:last-child { margin-bottom: 2px; }
+.howto .howto-note { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; }
+
+.clear-stage .row .where { color: var(--room-ink-2); font-size: 12px; opacity: .85; }
+.clear-stage .row button.tiny { margin-left: 6px; color: var(--room-ink-2); border-color: var(--room-line); }
+.clear-stage .row button.tiny:hover { color: var(--room-ink); border-color: var(--room-ink-2); }
+
+/* ───────────────── 知らせ ───────────────── */
+
+.toasts {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+  z-index: 80; display: flex; flex-direction: column; gap: 6px; align-items: center;
+  pointer-events: none;
+}
+.toast {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px; max-width: min(560px, 92vw); line-height: 1.5;
+  padding: 8px 8px 8px 16px; border-radius: 16px;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--line-2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .14);
+  pointer-events: auto;
+}
+.toast > span { min-width: 0; }
+.toast .undo {
+  flex: none; font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;
+  background: var(--accent); border: 1px solid var(--accent); color: var(--accent-ink);
+  border-radius: 999px; padding: 4px 13px;
+}
+.toast .undo:hover { filter: brightness(1.08); }
+.toast .shut {
+  flex: none; font: inherit; font-size: 15px; line-height: 1; cursor: pointer;
+  background: transparent; border: none; color: var(--ink-3);
+  padding: 4px 8px; border-radius: 999px;
+}
+.toast .shut:hover { color: var(--ink); background: var(--paper-2); }
+.toast.bad { border-color: var(--bad); color: var(--bad); }
+
+/* 板そのものの不調は紙の上ではなく帯に出す。読むものを増やさない */
+.alerts {
+  flex: none; display: flex; flex-direction: column; gap: 5px;
+  width: 100%; padding: 0 0 2px;
+}
+.alerts:empty { display: none; }
+.alert {
+  font-size: 12.5px; padding: 6px 12px; border-radius: 8px;
+  border: 1px solid var(--room-line); color: var(--room-ink-2);
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+}
+.alert.warn { border-color: color-mix(in srgb, var(--wait) 45%, var(--room-line)); color: var(--wait); }
+.alert.bad { border-color: color-mix(in srgb, var(--bad) 45%, var(--room-line)); color: var(--bad); }
+.alert button.tiny { color: inherit; border-color: currentColor; opacity: .8; }
+
+/* ───────────────── キーの一覧 ───────────────── */
+
+.keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 22px; }
+.keys .k { display: flex; align-items: baseline; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
+.keys kbd {
+  font: 11.5px/1.6 var(--mono); min-width: 22px; text-align: center;
+  background: var(--paper-2); border: 1px solid var(--line-2); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 6px; color: var(--ink);
+}
+
+/* ───────────────── 狭い画面 ───────────────── */
+
+@media (max-width: 880px) {
+  /* 横に並べる幅が無い。係を紙の上に寝かせ、棚は足元の帯にする。
+   * 棚は位置を決め打ちせず、ふつうの縦並びの一番下に置く —
+   * 札が1段に収まらない幅では折り返すので、高さが決め打ちできない。
+   * 横スクロールにすると、電話では画面外の札に気づけない（初見レビュー C-1）*/
+  .room { display: flex; flex-direction: column; }
+  .stage {
+    position: relative; inset: auto; flex: 1 1 auto; min-height: 0;
+    flex-direction: column; align-items: stretch; justify-content: flex-start;
+    gap: 8px; padding: 10px 12px;
+  }
+  .bot-slot { width: 100%; }
+  /* 子の並びは ふきだし → 係。row-reverse で係が左に来るので、
+     ふきだしの尻尾（左向き）がそのまま係を指す */
+  .bot-side { flex-direction: row-reverse; align-items: flex-start; gap: 9px; }
+  .bot-art { width: 56px; flex: none; }
+  .bot-bubble { flex: 1 1 auto; width: auto; min-width: 0; }
+  .bot-bubble::before {
+    left: -5px; bottom: auto; top: 15px; margin: 0;
+    border: 0;
+    border-left: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+  }
+  .bot-side[data-tone="hot"] .bot-bubble::before { border-color: var(--bad); }
+
+  .sheet-area { max-width: none; height: auto; flex: 1 1 auto; min-height: 0; justify-content: flex-start; }
+
+  .rack {
+    position: static; width: auto; height: auto; flex: none;
+    border-left: 0; border-top: 1px solid var(--room-line);
+  }
+  .rack:hover, .rack:focus-within { width: auto; box-shadow: none; }
+  .rack-inner {
+    flex-direction: row; flex-wrap: wrap;
+    justify-content: center; align-items: center;
+    padding: 3px 6px; overflow: visible;
+  }
+  .rack-group {
+    flex-direction: row; gap: 0;
+    padding: 0; margin: 0; border: 0;
+  }
+  .rack-item { width: auto; flex: none; height: 46px; padding: 0 9px; }
+  .rack:hover .rl, .rack:focus-within .rl, .rack-foot { display: none; }
+  .rack:hover .rtag, .rack:focus-within .rtag { position: absolute; width: 8px; height: 8px; padding: 0; border-radius: 50%; font-size: 0; }
+
+  /* 物理キーボードが無い幅では、キーのヒントは読む対象を増やすだけ */
+  .kbd-only, .reply .hint, .field .hint, .esc-hint { display: none; }
+  .toast { width: calc(100vw - 24px); max-width: none; }
+  .toasts { bottom: 70px; }
+  .toast { font-size: 12.5px; padding: 7px 7px 7px 13px; }
+
+  .shelf-head { flex-wrap: wrap; }
+  .shelf-head .tabs { min-height: 30px; margin-left: 0; width: 100%; order: 3; overflow-x: auto; flex-wrap: nowrap; }
+  .shelf-head .tabs button { white-space: nowrap; flex: none; }
+  .sheet-scroll { padding: 18px 17px 4px; }
+  .sheet h1 { font-size: 19px; }
+  .answer { padding: 12px 17px 14px; }
+  .overlay { padding: 12px; }
+  .shelf-body { padding: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ───────────── 依頼の種類・優先度 ─────────────
+ * 種類は言葉（判断・確認・作業依頼・共有）がそのまま出ているので、
+ * 色で分けない。4色使うと、札そのものが読む対象になる。
+ * 色を使うのは「至急」だけ — 塗りつぶしの札は画面にこれ1つなので、
+ * 目が勝手に見つける。
+ */
+.chip.kind-decision, .chip.kind-confirm, .chip.kind-action, .chip.kind-fyi {
+  border-color: var(--line-2); background: var(--paper); color: var(--ink-2);
+}
+.chip.kind-fyi { background: var(--paper-2); color: var(--ink-3); }
+.chip.urgent {
+  border-color: var(--accent); background: var(--accent); color: var(--accent-ink);
+  font-weight: 700;
+}
+
+/* ───────────── やりとり ─────────────
+ * 1件の中に往復が積まれる。誰の発言かが読めることが一番大事。
+ */
+.thread { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.turn { padding-left: 11px; border-left: 3px solid var(--line-2); }
+.turn.you { border-left-color: var(--accent); }
+.turn-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.turn-head .who { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.turn.you .turn-head .who { color: var(--accent); }
+.turn-head .at { font-size: 11.5px; color: var(--ink-3); }
+.turn-body { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+
+/* 「この回答で完了にする」。押した状態が見て分かること */
+button.toggle {
+  font: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+  background: transparent; border: 1px solid var(--line-2); color: var(--ink-3);
+  border-radius: 999px; padding: 5px 13px;
+}
+button.toggle:hover { border-color: var(--go); color: var(--go); }
+button.toggle.on {
+  background: var(--go-soft); border-color: var(--go); color: var(--go); font-weight: 650;
+}
+/* チェックに見える形にする。灰色のボタンだと「押せない」と読まれた */
+button.toggle { display: inline-flex; align-items: center; gap: 7px; }
+button.toggle .tick {
+  width: 14px; height: 14px; border-radius: 4px; flex: none;
+  border: 1.5px solid var(--line-2); background: var(--paper);
+}
+button.toggle.on .tick {
+  background: var(--go); border-color: var(--go);
+  background-image: linear-gradient(45deg, transparent 45%, var(--paper) 45%, var(--paper) 55%, transparent 55%),
+                    linear-gradient(-45deg, transparent 45%, var(--paper) 45%, var(--paper) 55%, transparent 55%);
+  background-size: 9px 2px, 9px 2px;
+  background-position: 2px 8px, 4px 8px;
+  background-repeat: no-repeat;
+}
+button.toggle:hover .tick { border-color: var(--go); }
+
+/* 依頼を出すときの種類選び */
+.picker { display: flex; gap: 5px; flex-wrap: wrap; }
+button.pick {
+  font: inherit; font-size: 12.5px; cursor: pointer;
+  background: var(--paper); border: 1px solid var(--line-2); color: var(--ink-2);
+  border-radius: 999px; padding: 4px 13px;
+}
+button.pick:hover { border-color: var(--accent); }
+button.pick.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+
+/* ───────────── タスク ─────────────
+ * 着手中 / 未着手 / 完了 の3列。Claude も人も同じファイルを動かす。
+ */
+.board-tasks { display: flex; flex-direction: column; gap: 12px; }
+.lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.lane { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-2); overflow: hidden; }
+.lane > h3 {
+  display: flex; align-items: baseline; gap: 7px; margin: 0;
+  padding: 8px 12px; font-size: 12.5px; font-weight: 700;
+  border-bottom: 1px solid var(--line); background: var(--paper);
+}
+.lane > h3 .n {
+  font-size: 11px; color: var(--ink-3); background: var(--paper-2);
+  border: 1px solid var(--line-2); border-radius: 999px; padding: 0 6px; line-height: 16px;
+}
+.lane-doing > h3 { border-bottom-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.lane-body { display: flex; flex-direction: column; gap: 8px; padding: 9px; }
+.lane-empty { padding: 14px; text-align: center; color: var(--ink-3); font-size: 12.5px; }
+.task { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; }
+.task-title { font-size: 13.5px; font-weight: 650; line-height: 1.5; word-break: break-word; margin-bottom: 5px; }
+.task-now { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.task .actions { margin-top: 7px; }
+.task .source { margin-top: 7px; padding-top: 5px; }
+
+@media (max-width: 760px) {
+  .lanes { grid-template-columns: 1fr; }
+}

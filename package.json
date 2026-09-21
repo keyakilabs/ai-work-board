@@ -1,0 +1,44 @@
+{
+  "name": "ai-work-board",
+  "version": "0.1.0",
+  "description": "A local board you and Claude Code share: what it wants to ask you, what it is doing, what you want to tell it, and what you already decided together. Runs on 127.0.0.1, no outbound network, and never touches your Claude Code settings.",
+  "type": "module",
+  "bin": {
+    "ai-work-board": "bin/ai-work-board.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "web",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node bin/ai-work-board.mjs",
+    "demo": "node bin/ai-work-board.mjs --demo",
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keyakilabs/ai-work-board.git"
+  },
+  "homepage": "https://github.com/keyakilabs/ai-work-board#readme",
+  "bugs": {
+    "url": "https://github.com/keyakilabs/ai-work-board/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "board",
+    "localhost",
+    "inbox",
+    "tasks",
+    "cli",
+    "offline"
+  ]
+}

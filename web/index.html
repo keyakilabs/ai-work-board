@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'self'; form-action 'none'; base-uri 'none'">
+<title>ai-work-board</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3.5' fill='%23a3432b'/><rect x='3.2' y='4' width='9.6' height='1.7' rx='.85' fill='%23fff'/><rect x='3.2' y='7.15' width='6.4' height='1.7' rx='.85' fill='%23fff' opacity='.75'/><rect x='3.2' y='10.3' width='8.4' height='1.7' rx='.85' fill='%23fff' opacity='.5'/></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- 部屋。左に係が立っていて、真ん中に紙が1枚、右に棚。これだけ -->
+<div class="room">
+  <main class="stage" id="stage" tabindex="-1">
+    <div class="bot-slot" id="botslot"></div>
+
+    <div class="sheet-area">
+      <div class="alerts" id="alerts"></div>
+      <div class="paper-slot" id="paper"></div>
+      <nav class="pager" id="pager" aria-label="紙を送る"></nav>
+    </div>
+  </main>
+
+  <!-- 棚。ふだんは絵と数字だけ。マウスを乗せる（またはタブで入る）と名前が出る -->
+  <aside class="rack" id="rack" aria-label="棚（ほかの一覧）"></aside>
+</div>
+
+<div class="fx" id="fx" aria-hidden="true"></div>
+<div class="overlay" id="overlay" hidden></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script type="module" src="/app.mjs"></script>
+</body>
+</html>
