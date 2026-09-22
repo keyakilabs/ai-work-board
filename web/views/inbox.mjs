@@ -199,6 +199,9 @@ export function sheet(item, api, sessionName = null, { swapped = true } = {}) {
     el('div', { class: 'kicker' }, [
       chip(item.kindLabel ?? '依頼', KIND_CLASS[item.kind] ?? ''),
       item.priority === 'high' ? chip('至急', 'urgent') : null,
+      // 新しい依頼と、こちらが答えたあとの返信は、読み方がまったく違う
+      (item.replies ?? []).at(-1)?.who === 'claude' && (item.replies ?? []).length > 1
+        ? chip('返信あり', 'me') : null,
       w ? chip(w, 'wait') : null,
       item.project ? chip(item.project) : null,
       sessionName ? chip(sessionName, 'soft') : null,

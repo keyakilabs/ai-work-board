@@ -321,7 +321,37 @@ async function readDir(dir, where) {
 }
 
 const PRI_RANK = { high: 0, normal: 1, low: 2 };
-const oldestFirst = (a, b) => String(a.created || '').localeCompare(String(b.created || ''));
+const oldestFirst = (a, b) => String(turnedAt(a)).localeCompare(String(turnedAt(b)));
+
+/**
+ * 最後に発言したのは誰か。
+ *
+ * ここが「いま誰の番か」の正本。`status` は Claude が書き換えるのを
+ * 忘れることがあるが、**会話の最後の行は嘘をつけない**。
+ */
+export function lastSpeaker(item) {
+  const last = (item.replies ?? []).at(-1);
+  return last ? last.who : null;
+}
+
+/** いつからその人の番になったか。並び順は「待たせている時間」で決める。 */
+export function turnedAt(item) {
+  return (item.replies ?? []).at(-1)?.at || item.created || '';
+}
+
+/**
+ * あなたの番か。
+ *
+ * 決め手は「最後に話したのが誰か」。Claude が返信を積んだ時点で
+ * 人の番に戻る — でないと、人が答えて Claude が返しても、その紙は
+ * ずっと「Claude の番」に居座り、受付で待っている人には永久に届かない。
+ * `status` に頼ると、Claude が1行書き換え忘れるだけで会話が止まる。
+ */
+export function isYourTurn(item) {
+  const who = lastSpeaker(item);
+  if (who) return who === 'claude';
+  return item.status === 'open';
+}
 
 /** 優先度 → 起票順。desk の既定の並び。 */
 export function byPriorityThenAge(a, b) {
@@ -346,10 +376,10 @@ export function groupForBoard(items) {
   const broken = items.filter((e) => e.broken);
   const ok = items.filter((e) => !e.broken);
   return {
-    // あなた待ち。優先度が高いもの・古いものから
-    waiting: ok.filter((e) => e.status === 'open').sort(byPriorityThenAge),
-    // Claude 待ち。こちらは答え終わっているので、眺めるだけ
-    theirs: ok.filter((e) => e.status === 'answered').sort(byPriorityThenAge),
+    // あなた待ち。優先度が高いもの・待たせているものから
+    waiting: ok.filter(isYourTurn).sort(byPriorityThenAge),
+    // Claude の番。あなたが答えたので、次は向こうが動く
+    theirs: ok.filter((e) => !isYourTurn(e)).sort(byPriorityThenAge),
     broken,
   };
 }

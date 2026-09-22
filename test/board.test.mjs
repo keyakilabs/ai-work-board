@@ -327,3 +327,69 @@ test('返信者の名前は、板に書かれているものをそのまま残�
   assert.equal(item.from, 'PM');
   assert.equal(item.replies.at(-1).who, '経理担当');
 });
+
+/* ── いま誰の番か ───────────────────────────
+ * 山下の疎通テストで詰まったところ。人が依頼を出し、Claude が返信しても、
+ * その紙が「Claude の番」に居座り続けて受付に戻ってこなかった。
+ * status に頼っていたのが原因で、Claude が1行書き換え忘れるだけで会話が止まる。
+ */
+
+test('Claude が返信を積んだら、その紙は受付に戻る', async () => {
+  const dir = await ws();
+  // 画面から出した依頼は「Claude の番」で始まる（自分の依頼を自分で待たない）
+  const { id } = await createItem(dir, { title: '疎通テスト', kind: 'confirm', from: 'you', status: 'answered' });
+  let g = groupForBoard(await readItems(dir));
+  assert.equal(g.waiting.length, 0, '出した直後に自分待ちになっている');
+  assert.equal(g.theirs.length, 1);
+
+  // Claude が返信を積む（status は触らない）
+  const file = path.join(boardPaths(dir).items, `${id}.md`);
+  await fs.appendFile(file, '\n<!-- reply claude 2026-09-22T11:45:00+09:00 -->\n\n見ました。直します\n');
+
+  g = groupForBoard(await readItems(dir));
+  assert.equal(g.waiting.length, 1, 'Claude が答えたのに受付へ戻っていない');
+  assert.equal(g.theirs.length, 0);
+  assert.equal(g.waiting[0].status, 'answered', 'status は書き換わっていないこと（判定に使っていない）');
+});
+
+test('自分が答えたら Claude の番のまま', async () => {
+  const dir = await ws();
+  const { id } = await createItem(dir, { title: '丸めをどうするか', kind: 'decision', from: 'claude' });
+  assert.equal(groupForBoard(await readItems(dir)).waiting.length, 1, '新しい依頼が受付に出ていない');
+
+  await answerItem(dir, id, '四捨五入で');
+  const g = groupForBoard(await readItems(dir));
+  assert.equal(g.waiting.length, 0, '自分が答えたのに受付に残っている');
+  assert.equal(g.theirs.length, 1);
+});
+
+test('往復しても、最後に話した相手で決まる', async () => {
+  const dir = await ws();
+  const { id } = await createItem(dir, { title: '往復', kind: 'decision', from: 'claude' });
+  const file = path.join(boardPaths(dir).items, `${id}.md`);
+
+  await answerItem(dir, id, '1回目の回答');                      // 自分 → Claude の番
+  assert.equal(groupForBoard(await readItems(dir)).waiting.length, 0);
+
+  await fs.appendFile(file, '\n<!-- reply claude 2026-09-22T12:00:00+09:00 -->\n\n直しました\n');
+  assert.equal(groupForBoard(await readItems(dir)).waiting.length, 1);   // Claude → 自分の番
+
+  await answerItem(dir, id, '確認した');                          // 自分 → Claude の番
+  assert.equal(groupForBoard(await readItems(dir)).waiting.length, 0);
+});
+
+test('待たせている時間の順に並ぶ（起票順ではなく、番が回った順）', async () => {
+  const dir = await ws();
+  const old = await createItem(dir, { title: '古い依頼', kind: 'confirm', from: 'claude' });
+  const recent = await createItem(dir, { title: '新しい依頼', kind: 'confirm', from: 'claude' });
+
+  // 新しい方に Claude が返信を積む＝番が回ったのはこちらが後
+  await answerItem(dir, old.id, 'これは答えた');
+  await fs.appendFile(path.join(boardPaths(dir).items, `${old.id}.md`),
+    '\n<!-- reply claude 2099-01-01T00:00:00+09:00 -->\n\nずっと後で返信\n');
+
+  const g = groupForBoard(await readItems(dir));
+  assert.deepEqual(g.waiting.map((e) => e.title), ['新しい依頼', '古い依頼'],
+    '返信が来たばかりのものが、先に待っているものを追い越している');
+  void recent;
+});

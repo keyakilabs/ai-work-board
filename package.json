@@ -1,6 +1,6 @@
 {
   "name": "ai-work-board",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A local board you and Claude Code share: what it wants to ask you, what it is doing, what you want to tell it, and what you already decided together. Runs on 127.0.0.1, no outbound network, and never touches your Claude Code settings.",
   "type": "module",
   "bin": {

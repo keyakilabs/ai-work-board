@@ -9,10 +9,26 @@ import { createServer } from '../src/server.mjs';
 import { boardPaths } from '../src/board.mjs';
 import { ensureInstructions, describe } from '../src/setup.mjs';
 import { spawn } from 'node:child_process';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * 版を名乗る。
+ *
+ * npx は同じ指定なら取り直さずキャッシュを使うので、直したのに直らない、が
+ * 起きる。そのとき「いま動いているのが何か」が画面に出ていないと、
+ * 直した側も使う側も原因を追えない。
+ */
+const VERSION = await fs.readFile(
+  path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8',
+).then((t) => JSON.parse(t).version).catch(() => '?');
 
 const HELP = `
 ai-work-board — Claude と共用の掲示板・連絡帳（Anthropic 公式のツールではありません）
+
+  版が古いまま動いていないか: 起動時に出る番号と、GitHub の package.json を見比べてください
+  （npx はキャッシュを使い回すので、取り直すには #<コミット> を付けます）
 
   使い方:  npx ai-work-board [options]
 
@@ -118,7 +134,7 @@ if (opts.setup && !opts.demo) {
 
 const url = `http://127.0.0.1:${port}`;
 process.stdout.write(`
-  ai-work-board  ${url}
+  ai-work-board ${VERSION}  ${url}
   ${opts.demo ? 'demo — 自分のファイルは読んでいません' : `板: ${boardPaths(opts.workspace).root}`}
 ${setupNote}  止めるには Ctrl+C
 `);
