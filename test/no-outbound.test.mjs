@@ -17,7 +17,15 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** 書き込み系のAPIを呼んでよいファイル。ここ以外に増えたらテストが落ちる。 */
-const MAY_WRITE = new Set(['src/board.mjs', 'src/server.mjs']);
+/*
+ * ファイルを書いてよいファイル。
+ *
+ * `src/setup.mjs` だけは板の外（ワークスペースの CLAUDE.md と
+ * CLAUDE.board.md）に書く。板は取扱説明を読ませないと空のままなので、
+ * そこまでを道具の責任にした。**書いてよい場所が増えるときは、ここに
+ * 名前を足す＝意識して許すこと**を通らせる。
+ */
+const MAY_WRITE = new Set(['src/board.mjs', 'src/server.mjs', 'src/setup.mjs']);
 
 /**
  * 子プロセスを起こしてよいファイル。

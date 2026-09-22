@@ -413,9 +413,13 @@ function renderTitle() {
   const list = waiting();
   const terms = (state?.sessions?.sessions ?? [])
     .filter((s) => s.status === 'waiting' || s.state === 'blocked').length;
+  // どの板かをタブに出す。プロジェクトごとに立てるものなので、
+  // 2つ開いたときに見分けられないと、別の板に答えてしまう
+  const where = state?.demo ? 'demo' : folderName(state?.boardDir ?? state?.workspace);
+  const name = where ? `${where} · ai-work-board` : 'ai-work-board';
   document.title = list.length
-    ? `(${list.length}${terms ? `+${terms}` : ''}) ai-work-board`
-    : (terms ? `(ターミナル${terms}) ai-work-board` : 'ai-work-board');
+    ? `(${list.length}${terms ? `+${terms}` : ''}) ${name}`
+    : (terms ? `(ターミナル${terms}) ${name}` : name);
 }
 
 /**
@@ -530,6 +534,13 @@ function rackItem(spec) {
   ]);
 }
 
+/** パスから、見分けのつく最後のフォルダ名だけを取り出す。 */
+function folderName(p) {
+  if (!p) return '';
+  return p.replace(/\/\.board\/?$/, '').replace(/\/\.claude\/board\/?$/, '')
+    .split('/').filter(Boolean).pop() ?? '';
+}
+
 function rackSig() {
   return JSON.stringify([
     RACK.map((g) => g.items.map((it) => {
@@ -563,9 +574,7 @@ function renderRack() {
   // 長いパスは畳んだ棚に入らないうえ、末尾が切れて見分けがつかない。
   // 板を2枚開いて使うので、見分けがつく所（フォルダ名）を出す
   const where = state?.boardDir ?? state?.workspace ?? null;
-  const folder = where
-    ? (where.replace(/\/\.claude\/board\/?$/, '').split('/').filter(Boolean).pop() ?? where)
-    : 'demo';
+  const folder = where ? (folderName(where) || where) : 'demo';
   groups.push(el('p', { class: 'rack-foot', title: where ?? 'demo — ファイルは読んでいません' }, [
     el('span', { class: 'rf-name', text: folder }),
     el('span', { class: 'rf-where', text: where ?? 'demo — ファイルは読んでいません' }),

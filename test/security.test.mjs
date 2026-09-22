@@ -487,3 +487,19 @@ test('板に置かれたシンボリックリンク越しに、板の外は読�
 
   await app.close();
 });
+
+test('ポートが埋まっていたら、次の空きを自分で探す', async () => {
+  // プロジェクトごとに板を立てるのはふつうのことなので、2つ目で
+  // 「使われています」と言って止まるのは道具側の怠慢
+  const a = await boot();
+  const bWs = await fs.mkdtemp(path.join(os.tmpdir(), 'awb-port-'));
+  const app = await createServer({ workspace: bWs, port: 0, log: false });
+
+  // 1つ目が使っている番号を指定して、EADDRINUSE が起きることを先に確かめる
+  await assert.rejects(app.listen(a.port), (e) => e.code === 'EADDRINUSE');
+  const other = await app.listen(0);
+  assert.notEqual(other, a.port);
+
+  await app.close();
+  await a.app.close();
+});
