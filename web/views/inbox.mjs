@@ -6,7 +6,7 @@
  * 答えると「Claude 待ち」になり、受付から外れる。
  */
 
-import { el, chip, waited, ago, entrySource, text as richText } from '../ui.mjs';
+import { el, chip, waited, ago, entrySource, enterGuard, text as richText } from '../ui.mjs';
 
 const KIND_CLASS = { decision: 'kind-decision', confirm: 'kind-confirm', action: 'kind-action', fyi: 'kind-fyi' };
 
@@ -92,7 +92,10 @@ function reply(item, api, hasChoices) {
   };
 
   send.addEventListener('click', submit);
+  const composing = enterGuard(box);
   box.addEventListener('keydown', (e) => {
+    // ⌘Enter でも、変換中なら送らない（環境によって修飾キーごと届く）
+    if (composing(e)) return;
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); }
   });
 

@@ -5,7 +5,7 @@
  * 開いたときだけオーバーレイで出て、Esc で閉じる。受付の邪魔をさせない。
  */
 
-import { el, chip, text, ago, waited, unknown, veil, entrySource, factSource } from '../ui.mjs';
+import { el, chip, text, ago, waited, unknown, veil, entrySource, enterGuard, factSource } from '../ui.mjs';
 
 /**
  * 帯に並ぶ名前は短く。長くすると帯が2段に割れて、受付の紙が押し下げられる。
@@ -73,7 +73,11 @@ function tasksTab(state, api) {
     } finally { send.disabled = false; }
   };
   send.addEventListener('click', submit);
-  title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  const titleComposing = enterGuard(title);
+  title.addEventListener('keydown', (e) => {
+    // 変換の確定 Enter で送らない
+    if (e.key === 'Enter' && !titleComposing(e)) { e.preventDefault(); submit(); }
+  });
 
   const lanes = state.tasks?.lanes ?? [];
   const byKey = Object.fromEntries(lanes.map((l) => [l.key, l]));
@@ -303,7 +307,10 @@ function newTab(state, api) {
   };
   send.addEventListener('click', submit);
   for (const f of [title, body]) {
+    const composing = enterGuard(f);
     f.addEventListener('keydown', (e) => {
+      // 変換の確定 Enter で送らない（見出しは Enter だけで送るので、ここが要る）
+      if (composing(e)) return;
       if (e.key === 'Enter' && (f === title || e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); }
     });
   }

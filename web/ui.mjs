@@ -12,6 +12,26 @@ export function el(tag, props = {}, children = []) {
   return n;
 }
 
+/**
+ * 変換の確定 Enter を、送信と取り違えないための見張り。
+ *
+ * 日本語を打つと Enter は2つの意味を持つ。変換を確定する Enter と、
+ * 送信する Enter。前者で送ってしまうと、書きかけの見出しが**打っている
+ * 途中のまま**板に飛ぶ。しかも起きるのは日本語を打つ人だけなので、
+ * 英語しか打たないと最後まで気づけない。
+ *
+ * 判定は `isComposing` が本筋。加えて、確定直後の数十ミリ秒も止める
+ * （環境によって、確定の Enter が composing の外で飛んでくることがある）。
+ *
+ * 返ってくる関数が true を返したら、その Enter は送信ではない。
+ */
+export function enterGuard(field) {
+  let quietUntil = 0;
+  field.addEventListener('compositionstart', () => { quietUntil = Infinity; });
+  field.addEventListener('compositionend', () => { quietUntil = Date.now() + 50; });
+  return (e) => e.isComposing === true || e.keyCode === 229 || Date.now() < quietUntil;
+}
+
 export function chip(text, cls = '') {
   return el('span', { class: `chip${cls ? ` ${cls}` : ''}`, text });
 }
