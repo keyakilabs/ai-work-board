@@ -731,7 +731,7 @@ document.addEventListener('keydown', (e) => {
     case 'j': case 'ArrowRight': e.preventDefault(); step(1); break;
     case 'k': case 'ArrowLeft': e.preventDefault(); step(-1); break;
     case 'r': e.preventDefault(); current?.focusReply(); break;
-    case 't': case 'c': case 'n': case 'a': case 'i': {
+    case 't': case 'c': case 'a': case 'i': {
       const tab = TABS.find((x) => x.key === e.key);
       if (tab) { e.preventDefault(); api.openShelf(tab.id); }
       break;

@@ -49,6 +49,17 @@ test('セッションの欄がどこにも残っていない', async () => {
   }
 });
 
+test('キーの受け口に、もう無いキーが残っていない', async () => {
+  // `TABS` から落とすだけでは、押しても何も起きない死んだ分岐が残る。
+  // 見た目は正常なので人の目では気づけない
+  const src = await fs.readFile(path.join(ROOT, 'web/app.mjs'), 'utf8');
+  const at = src.indexOf("case 't': case 'c':");
+  assert.ok(at >= 0, '棚を開くキーの受け口が見つからない（名前を変えたらこのテストも直す）');
+  const line = src.slice(at, src.indexOf('\n', at));
+  const keys = [...line.matchAll(/case '([a-z])'/g)].map((m) => m[1]);
+  assert.deepEqual(keys, TABS.map((t) => t.key), '受け口のキーが TABS と食い違っている');
+});
+
 test('セッションを組み立てるファイルが無い', async () => {
   await assert.rejects(() => fs.stat(path.join(ROOT, 'src/sessions.mjs')),
     /ENOENT/, 'src/sessions.mjs が戻っている');
