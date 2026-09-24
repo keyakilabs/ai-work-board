@@ -437,6 +437,10 @@ test('既定で起動しても、ホームに作るのは access.log 1本だけ'
    */
   assert.deepEqual(found, ['.ai-work-board/access.log'], `板が書いたもの: ${found.join(', ')}`);
 
+  // 上の deepEqual に含まれてはいるが、README の一番目立つ約束はここで名指しする。
+  // 壊れたときに「配列の差分」ではなく、破れた約束の名前で分かるように
+  assert.ok(!found.includes('.claude/settings.json'), 'settings.json を作っている');
+
   // 中身は日付1行だけ。時刻も URL も IP も残さない、と README で言っている
   const body = await fs.readFile(path.join(home, '.ai-work-board', 'access.log'), 'utf8');
   for (const line of body.split('\n').filter(Boolean)) {

@@ -22,12 +22,13 @@ import { TABS } from '../web/views/shelf.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 async function sources(dirs = ['src', 'web', 'bin']) {
+  // .mjs だけでなく css も見る。表示を戻すときは CSS から生えることがある
   const out = [];
   const walk = async (dir) => {
     for (const e of await fs.readdir(dir, { withFileTypes: true })) {
       const p = path.join(dir, e.name);
       if (e.isDirectory()) { await walk(p); continue; }
-      if (p.endsWith('.mjs')) out.push([path.relative(ROOT, p), await fs.readFile(p, 'utf8')]);
+      if (/\.(mjs|css)$/.test(p)) out.push([path.relative(ROOT, p), await fs.readFile(p, 'utf8')]);
     }
   };
   for (const d of dirs) await walk(path.join(ROOT, d));
@@ -39,7 +40,10 @@ test('セッションの欄がどこにも残っていない', async () => {
   assert.ok(!TABS.some((t) => t.key === 'n'), '`n` のキーが残っている');
 
   for (const [rel, src] of await sources()) {
-    assert.ok(!/\bsessions\b/.test(src), `${rel}: セッションの一覧を見ている`);
+    // 小文字の複数形だけを見ると `collectSessions` / `sessionId` がすり抜ける。
+    // ラテン文字の `session` をすべて拾う（日本語の「セッション」は正当な文脈で
+    // 残っているので、ここには掛からない）
+    assert.ok(!/session/i.test(src), `${rel}: セッションを見ている`);
     assert.ok(!src.includes('--resume'), `${rel}: セッションを開くコマンドが残っている`);
     assert.ok(!src.includes('claude agents'), `${rel}: Claude の CLI を起こしている`);
   }
