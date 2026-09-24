@@ -299,6 +299,6 @@ export function clearStage(state, api) {
         el('code', { text: 'templates/CLAUDE.board.md を自分の CLAUDE.md に貼るか @ で読み込ませる' }),
       ])
       : null,
-    el('button', { class: 'quiet', type: 'button', text: 'Claude にスレッドを立てる', onclick: () => api.openShelf('new') }),
+    el('button', { class: 'quiet', type: 'button', text: 'Claude とのスレッドを立てる', onclick: () => api.openShelf('new') }),
   ]);
 }
