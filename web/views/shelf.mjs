@@ -283,14 +283,14 @@ function newTab(state, api) {
     return b;
   }));
 
-  const title = keeping(el('input', { type: 'text', placeholder: 'スレッドを一行で', 'aria-label': 'スレッド' }), 'draft:new:title', api);
+  const title = keeping(el('input', { type: 'text', placeholder: '見出しを一行で', 'aria-label': 'スレッドの見出し' }), 'draft:new:title', api);
   const body = keeping(el('textarea', { rows: '3', placeholder: '補足（なくてもいい）', 'aria-label': '補足' }), 'draft:new:body', api);
   // 「板に置く」は、押す前に何が起きるか読めない。送ることを書く
   const send = el('button', { class: 'go', type: 'button', text: 'Claude に渡す' });
 
   const submit = async () => {
     const t = title.value.trim();
-    if (!t) { title.focus(); api.toast('スレッドを一行で書いてください'); return; }
+    if (!t) { title.focus(); api.toast('見出しを一行で書いてください'); return; }
     send.disabled = true;
     // 送る「前」に手元を空にする。再描画は post の途中でも起きるので、
     // あとで消すと書いた文字が戻ってきて、二重投稿の原因になる

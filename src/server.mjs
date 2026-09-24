@@ -284,7 +284,7 @@ export async function createServer(opts = {}) {
         return json(res, 200, { ok: true, ...r });
       }
 
-      /** こちらから依頼を立てる（Claude への伝言もこの形で置く）。 */
+      /** こちらからスレッドを立てる（Claude への伝言もこの形で置く）。 */
       if (url.pathname === '/api/item' && isWrite) {
         const { title, body, kind, priority, project } = await readJsonBody(req);
         if (!title || !String(title).trim()) return json(res, 400, { error: '見出しが空' });
@@ -293,7 +293,7 @@ export async function createServer(opts = {}) {
           priority: priority || 'normal', project: project || '',
           // 画面から入った印。ただし出どころの保証ではない（誰でも書ける）
           origin: 'board-ui', from: 'you',
-          // こちらから出した依頼は、出した時点で Claude の番
+          // こちらから出したスレッドは、出した時点で Claude の番
           status: 'answered',
         });
         broadcast();

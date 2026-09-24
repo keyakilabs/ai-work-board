@@ -115,7 +115,7 @@ test('正しい Origin とトークンなら書ける', async () => {
   // 画面から書いたものには印が付く（ただし出どころの保証ではない）
   const board = await (await hit(c.base, '/api/board')).json();
   const placed = board.theirs.find((e) => e.title === '通ること');
-  assert.ok(placed, '置いた依頼が Claude 待ちに出てこない');
+  assert.ok(placed, '置いたスレッドが Claude 待ちに出てこない');
   assert.equal(placed.origin, 'board-ui');
   await c.app.close();
 });

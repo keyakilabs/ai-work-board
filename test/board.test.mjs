@@ -105,7 +105,7 @@ test('片付けた直後に書いても、closed のものを上書きしない'
 test('立て続けに20件書いても1件も落ちない', async () => {
   const w = await ws();
   await Promise.all(Array.from({ length: 20 }, (_, i) =>
-    createItem(w, { kind: 'action', title: `依頼です${i}` })));
+    createItem(w, { kind: 'action', title: `スレッドです${i}` })));
   assert.equal(groupForBoard(await readItems(w)).waiting.length, 20);
 });
 
@@ -198,14 +198,14 @@ test('Claude の発言は受付に戻しても消えない', async () => {
   assert.equal(back.replies[0].who, 'claude');
 });
 
-test('片付いた依頼には答えられない', async () => {
+test('片付いたスレッドには答えられない', async () => {
   const w = await ws();
   const { id } = await createItem(w, { kind: 'confirm', title: 'もう終わった' });
   await closeItem(w, id);
   await assert.rejects(() => answerItem(w, id, 'あとから'), /片付いた/);
 });
 
-test('無い依頼に触ると ENOENT で返る（500 にしない）', async () => {
+test('無いスレッドに触ると ENOENT で返る（500 にしない）', async () => {
   const w = await ws();
   await assert.rejects(() => answerItem(w, '20260101-000000-nope', 'x'), (e) => e.code === 'ENOENT');
 });
@@ -329,14 +329,14 @@ test('返信者の名前は、板に書かれているものをそのまま残�
 });
 
 /* ── いま誰の番か ───────────────────────────
- * 山下の疎通テストで詰まったところ。人が依頼を出し、Claude が返信しても、
+ * 山下の疎通テストで詰まったところ。人がスレッドを出し、Claude が返信しても、
  * その紙が「Claude の番」に居座り続けて受付に戻ってこなかった。
  * status に頼っていたのが原因で、Claude が1行書き換え忘れるだけで会話が止まる。
  */
 
 test('Claude が返信を積んだら、その紙は受付に戻る', async () => {
   const dir = await ws();
-  // 画面から出した依頼は「Claude の番」で始まる（自分の依頼を自分で待たない）
+  // 画面から出したスレッドは「Claude の番」で始まる（自分のスレッドを自分で待たない）
   const { id } = await createItem(dir, { title: '疎通テスト', kind: 'confirm', from: 'you', status: 'answered' });
   let g = groupForBoard(await readItems(dir));
   assert.equal(g.waiting.length, 0, '出した直後に自分待ちになっている');
@@ -355,7 +355,7 @@ test('Claude が返信を積んだら、その紙は受付に戻る', async () =
 test('自分が答えたら Claude の番のまま', async () => {
   const dir = await ws();
   const { id } = await createItem(dir, { title: '丸めをどうするか', kind: 'decision', from: 'claude' });
-  assert.equal(groupForBoard(await readItems(dir)).waiting.length, 1, '新しい依頼が受付に出ていない');
+  assert.equal(groupForBoard(await readItems(dir)).waiting.length, 1, '新しいスレッドが受付に出ていない');
 
   await answerItem(dir, id, '四捨五入で');
   const g = groupForBoard(await readItems(dir));
@@ -380,8 +380,8 @@ test('往復しても、最後に話した相手で決まる', async () => {
 
 test('待たせている時間の順に並ぶ（起票順ではなく、番が回った順）', async () => {
   const dir = await ws();
-  const old = await createItem(dir, { title: '古い依頼', kind: 'confirm', from: 'claude' });
-  const recent = await createItem(dir, { title: '新しい依頼', kind: 'confirm', from: 'claude' });
+  const old = await createItem(dir, { title: '古いスレッド', kind: 'confirm', from: 'claude' });
+  const recent = await createItem(dir, { title: '新しいスレッド', kind: 'confirm', from: 'claude' });
 
   // 新しい方に Claude が返信を積む＝番が回ったのはこちらが後
   await answerItem(dir, old.id, 'これは答えた');
@@ -389,7 +389,7 @@ test('待たせている時間の順に並ぶ（起票順ではなく、番が�
     '\n<!-- reply claude 2099-01-01T00:00:00+09:00 -->\n\nずっと後で返信\n');
 
   const g = groupForBoard(await readItems(dir));
-  assert.deepEqual(g.waiting.map((e) => e.title), ['新しい依頼', '古い依頼'],
+  assert.deepEqual(g.waiting.map((e) => e.title), ['新しいスレッド', '古いスレッド'],
     '返信が来たばかりのものが、先に待っているものを追い越している');
   void recent;
 });
