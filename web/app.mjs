@@ -514,15 +514,17 @@ function rackItem(spec) {
   const label = (typeof spec.label === 'function' ? spec.label() : spec.label) ?? tab?.label ?? spec.id;
   const icon = typeof spec.icon === 'function' ? spec.icon() : spec.icon;
   const key = spec.key ?? tab?.key ?? '';
-  const n = spec.count ? spec.count()
-    : (tab && !tab.noCount ? shelfCount(state, spec.id) : null);
+  // `noCount` は「自動で数えない」ではなく「出さない」。札が独自に数えていても
+  // こちらが勝つ。でないと、札に `count` を足すだけで数字が戻ってしまう
+  const n = tab?.noCount ? null
+    : (spec.count ? spec.count() : (tab ? shelfCount(state, spec.id) : null));
   const hot = spec.hot ? spec.hot() : false;
 
   return el('button', {
     class: `rack-item${hot ? ' hot' : ''}`,
     type: 'button',
     title: `${spec.title ?? label}${key ? `（${key}）` : ''}`,
-    // 畳んでいるときは名前が見えないので、読み上げには必ず名前と件数を渡す
+    // 畳んでいるときは名前が見えないので、読み上げには名前を必ず渡す（件数は出す札だけ）
     'aria-label': n === null ? label : `${label} ${n}件`,
     onclick: spec.act ?? (() => api.openShelf(spec.id)),
   }, [
@@ -546,7 +548,7 @@ function rackSig() {
     RACK.map((g) => g.items.map((it) => {
       const tab = TABS.find((t) => t.id === it.id);
       return [
-        it.count ? it.count() : (tab && !tab.noCount ? shelfCount(state, it.id) : null),
+        tab?.noCount ? null : (it.count ? it.count() : (tab ? shelfCount(state, it.id) : null)),
         it.hot ? it.hot() : false,
       ];
     })),
