@@ -43,5 +43,10 @@ test('棚のタブは「スレッドを立てる」', async () => {
   // 「出す」は依頼の動詞。スレッドは「立てる」
   const shelf = await fs.readFile(path.join(ROOT, 'web/views/shelf.mjs'), 'utf8');
   assert.match(shelf, /label: 'スレッドを立てる'/, '棚のタブが「スレッドを立てる」になっていない');
-  assert.ok(!/スレッドを出す/.test(shelf), '「スレッドを出す」が残っている');
+
+  // **README や --help も見る。** shelf.mjs だけ見ていたので、
+  // README のキー表が画面に無いラベルを名指ししているのを見落とした
+  for (const [rel, src] of await sources()) {
+    assert.ok(!/スレッドを出す/.test(src), `${rel}: 「スレッドを出す」が残っている`);
+  }
 });

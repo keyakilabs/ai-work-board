@@ -12,7 +12,7 @@
 ```
 .board/
 ├── items/*.md                    スレッド（あなた ⇄ 私）
-├── closed/*.md                   閉じたスレッド
+├── closed/*.md                   片付いたスレッド
 └── tasks/{inbox,doing,done}/*.md タスク
 ```
 
