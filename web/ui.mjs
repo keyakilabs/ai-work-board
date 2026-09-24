@@ -237,7 +237,7 @@ function pathRow(p) {
 
 /**
  * 板のファイル1件の出どころ。押すとフルパスと生の md がそのまま出る。
- * 依頼（items / closed）にもタスク（lane）にも使う。
+ * スレッド（items / closed）にもタスク（lane）にも使う。
  */
 export function entrySource(entry, api) {
   const q = entry.lane
