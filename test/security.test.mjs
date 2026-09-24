@@ -428,18 +428,14 @@ test('既定で起動しても、ホームに作るのは access.log 1本だけ'
   await walk(home);
 
   /*
-   * 板が自分で書くのは access.log だけ。ただし板は「いまの作業」を出すために
-   * `claude agents --json` を起動するので、**その CLI が自分の設定ファイルを
-   * 触る**（`~/.claude.json` とそのバックアップ）。板が書いているのではないが、
-   * 板を起動した結果として増えるものなので、ここで名指しして分けておく。
-   * README にもそう書いてある。
+   * 板がホームに作るのは access.log だけ。
+   *
+   * 以前はここで `~/.claude.json` を例外にしていた — 「いまの作業」を出すために
+   * `claude agents --json` を起動していて、その CLI が自分の設定を触ったため。
+   * セッション欄を落として子プロセスを起こさなくなったので、例外を外した
+   * （2026-09-24）。また誰かが CLI を起こしたら、ここで落ちる。
    */
-  const cliOwn = (f) => f === '.claude.json' || f.startsWith('.claude/');
-  const ours = found.filter((f) => !cliOwn(f));
-  assert.deepEqual(ours, ['.ai-work-board/access.log'], `板が書いたもの: ${ours.join(', ')}`);
-
-  // 看板の約束。CLI が自分の設定を触っても、settings.json には手が出ていないこと
-  assert.ok(!found.includes('.claude/settings.json'), 'settings.json を作っている');
+  assert.deepEqual(found, ['.ai-work-board/access.log'], `板が書いたもの: ${found.join(', ')}`);
 
   // 中身は日付1行だけ。時刻も URL も IP も残さない、と README で言っている
   const body = await fs.readFile(path.join(home, '.ai-work-board', 'access.log'), 'utf8');

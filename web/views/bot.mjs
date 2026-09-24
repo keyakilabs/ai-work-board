@@ -26,11 +26,6 @@ const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const short = (s) => ellipsizeMiddle(String(s ?? ''), 22);
 
-function termWaits(state) {
-  return (state?.sessions?.sessions ?? [])
-    .filter((s) => s.status === 'waiting' || s.state === 'blocked').length;
-}
-
 /**
  * ポーズと一言。
  *
@@ -42,18 +37,9 @@ export function mood(state, { connected = true } = {}) {
   if (!state) return { pose: 'wait', line: '板を開いています…' };
 
   const list = state.waiting ?? [];
-  const terms = termWaits(state);
   const theirs = (state.theirs ?? []).length;
 
   if (list.length === 0) {
-    if (terms) {
-      return {
-        pose: 'wait', tone: 'hot',
-        line: '受付は空です',
-        sub: `ただしターミナルで${terms}本が入力待ちです`,
-        go: 'now',
-      };
-    }
     // 一度も使われていない板で「お疲れさまでした」と言うと、
     // 「自分は何か終えたことになっているのか」と読まれる（初見レビュー m-11）
     const used = theirs > 0
@@ -107,8 +93,7 @@ export function mood(state, { connected = true } = {}) {
   return {
     pose: 'wait',
     line: `${n}件、お返事をお待ちしています`,
-    sub: terms ? `ターミナルでも${terms}本が入力待ちです` : '急ぎのものはありません',
-    ...(terms ? { tone: 'hot', go: 'now' } : {}),
+    sub: '急ぎのものはありません',
   };
 }
 

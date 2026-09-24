@@ -125,7 +125,7 @@ function reply(item, api, hasChoices) {
 }
 
 /** 1件ぶんの紙。 */
-export function sheet(item, api, sessionName = null, { swapped = true } = {}) {
+export function sheet(item, api, { swapped = true } = {}) {
   const options = Array.isArray(item.options) ? item.options : [];
   const w = waited(item.created);
 
@@ -204,7 +204,6 @@ export function sheet(item, api, sessionName = null, { swapped = true } = {}) {
         ? chip('返信あり', 'me') : null,
       w ? chip(w, 'wait') : null,
       item.project ? chip(item.project) : null,
-      sessionName ? chip(sessionName, 'soft') : null,
     ]),
     el('h1', { text: item.title ?? '（見出しがありません）' }),
     item.body ? richText('lede', item.body) : null,
@@ -246,34 +245,10 @@ export function sheet(item, api, sessionName = null, { swapped = true } = {}) {
 /**
  * 受付が空のときの画面。
  *
- * 「0件です」で終わらせない。片付いたことが見えて、いま何が動いているかが
- * 静かに分かるところまでを1画面にする。
+ * 「0件です」で終わらせない。板に一度も書かれていないなら、それは
+ * 「スレッドが無い」のではなく「設定が効いていない」ので、そこを切り分ける。
  */
 export function clearStage(state, api) {
-  const sessions = state.sessions?.sessions ?? [];
-  const live = sessions.filter((s) => s.status === 'busy' || s.status === 'waiting' || s.state === 'blocked');
-  const waitingOnes = live.filter((s) => s.status === 'waiting' || s.state === 'blocked');
-  const busyOnes = live.filter((s) => !(s.status === 'waiting' || s.state === 'blocked'));
-
-  const row = (s) => el('div', { class: 'row', title: s.cwd ?? '' }, [
-    el('span', { class: `dot ${s.status === 'waiting' || s.state === 'blocked' ? 'wait' : 'busy'}` }),
-    el('span', { class: 'who', text: s.name ?? s.sessionId.slice(0, 8) }),
-    s.cwd ? el('span', { class: 'where', text: s.cwd.replace(/^.*\/(?=[^/]+$)/, '') }) : null,
-    el('button', {
-      class: 'tiny', type: 'button',
-      title: 'このセッションを開くコマンドをクリップボードにコピーします',
-      text: 'コマンドをコピー',
-      onclick: (ev) => api.copyResume(s, ev.currentTarget),
-    }),
-  ]);
-
-  const group = (label, list) => (list.length
-    ? el('div', { class: 'group' }, [
-      el('div', { class: 'group-label', text: label }),
-      el('div', { class: 'rows' }, list.slice(0, 6).map(row)),
-    ])
-    : null);
-
   // 「板が空」が信じられる状態かを、この画面で切り分けられるようにする。
   // Claude が一度も書いていないなら、スレッドが無いのではなく設定が効いていない
   const everWrote = (state.theirs ?? []).some((e) => e.from === 'claude')
@@ -282,16 +257,7 @@ export function clearStage(state, api) {
 
   return el('div', { class: 'clear-stage' }, [
     el('div', { class: 'big', text: '受付は空です' }),
-    el('div', {
-      class: 'sub',
-      text: waitingOnes.length
-        ? `ただし、ターミナル側で入力待ちのセッションが${waitingOnes.length}本あります。板に出てこない質問はそちらにあります。`
-        : (busyOnes.length
-          ? 'Claude が作業を続けています。聞きたいことができたら、ここに出ます。'
-          : 'Claude から新しいスレッドが来ると、ここに出ます。'),
-    }),
-    group('ターミナルで入力待ち', waitingOnes),
-    group('作業中', busyOnes),
+    el('div', { class: 'sub', text: 'Claude から新しいスレッドが来ると、ここに出ます。' }),
     !state.demo && !everWrote
       ? el('div', { class: 'setup-hint' }, [
         el('div', { text: 'Claude がこの板にまだ一度も書いていません。' }),

@@ -339,20 +339,6 @@ const api = {
   draft: (id) => drafts.get(id) ?? '',
   keepDraft: (id, v) => { if (v) drafts.set(id, v); else drafts.delete(id); saveDrafts(); },
 
-  /** そのセッションを開くコマンドを手元に渡す。行に「で、どこを見るの」を残さない。 */
-  async copyResume(s, button) {
-    const cmd = s.cwd ? `cd ${s.cwd} && claude --resume ${s.sessionId}` : `claude --resume ${s.sessionId}`;
-    const label = button.textContent;
-    try {
-      await navigator.clipboard.writeText(cmd);
-      button.textContent = 'コピーした';
-      toast(`コピーしました: ${cmd}`);
-      setTimeout(() => { button.textContent = label; }, 1600);
-    } catch {
-      // コピーできない環境では、せめて読める形で出す
-      toast(cmd);
-    }
-  },
   /** その紙を開く。係が言っていることの現物へ連れていく口。 */
   goTo(id) {
     if (!waiting().some((e) => e.id === id)) return;
@@ -402,24 +388,14 @@ function clearToast() {
 
 /* ── 描画 ─────────────────────────────────── */
 
-/**
- * タブの数字は「あなたが見るべき総数」。
- *
- * 板が空でもターミナルで待っているものがあるなら 0 にしない。裏のタブで数字
- * だけ見ている人が取りこぼす。足した数だけ出すと「(1) なのに開いたら空」に
- * 見えるので、板の件数とターミナルの本数は分けて書く。
- */
+/** タブの数字は「あなたが答えるべき枚数」。 */
 function renderTitle() {
   const list = waiting();
-  const terms = (state?.sessions?.sessions ?? [])
-    .filter((s) => s.status === 'waiting' || s.state === 'blocked').length;
   // どの板かをタブに出す。プロジェクトごとに立てるものなので、
   // 2つ開いたときに見分けられないと、別の板に答えてしまう
   const where = state?.demo ? 'demo' : folderName(state?.boardDir ?? state?.workspace);
   const name = where ? `${where} · ai-work-board` : 'ai-work-board';
-  document.title = list.length
-    ? `(${list.length}${terms ? `+${terms}` : ''}) ${name}`
-    : (terms ? `(ターミナル${terms}) ${name}` : name);
+  document.title = list.length ? `(${list.length}) ${name}` : name;
 }
 
 /**
@@ -437,17 +413,8 @@ function renderBot() {
   host.replaceChildren(node);
 }
 
-/**
- * 棚の数字は「開いたときに並ぶカードの枚数」にする。
- * 現況には自動で拾ったセッションも並ぶので、板のファイル数だけを出すと
- * 数字とカードが合わず、以後その数字が信じられなくなる。
- */
 /** 一覧の数字は「開いたときに並ぶ枚数」にする。数字と中身が食い違うと信用を失う。 */
 export function shelfCount(st, id) {
-  if (id === 'now') {
-    const ses = st?.sessions;
-    return ses?.available ? (ses.sessions ?? []).length : 0;
-  }
   if (id === 'tasks') return (st?.tasks?.lanes ?? []).reduce((n, l) => n + l.tasks.length, 0);
   if (id === 'new') return 0;
   return (st?.[id] ?? []).length;
@@ -476,22 +443,11 @@ const RACK = [
       { id: 'closed', icon: 'box-done' },
     ],
   },
-  // タスクとセッションは「スレッド」とも互いとも別のもの。同じまとまりに
-  // 入れると、レールが何の一覧なのか読めなくなる
+  // タスクは「スレッド」とは別のもの。同じまとまりに入れると、
+  // レールが何の一覧なのか読めなくなる
   {
     label: 'タスク',
     items: [{ id: 'tasks', icon: 'board' }],
-  },
-  {
-    label: 'セッション',
-    items: [
-      {
-        id: 'now', icon: 'seats',
-        hot: () => (state?.sessions?.sessions ?? [])
-          .some((x) => x.status === 'waiting' || x.state === 'blocked'),
-        hotLabel: '入力待ち',
-      },
-    ],
   },
   {
     label: '道具',
@@ -589,7 +545,6 @@ function alertSig() {
   return JSON.stringify([
     !!state?.demo,
     !!state?.legacyDir,
-    state?.sessions?.available === false ? state.sessions.why : null,
     (state?.broken ?? []).map((b) => `${b.id}|${b.brokenWhy ?? ''}`),
   ]);
 }
@@ -621,9 +576,6 @@ function renderAlerts() {
         },
       }),
     ]));
-  }
-  if (state?.sessions && state.sessions.available === false) {
-    rows.push(el('div', { class: 'alert warn', text: `現況の自動部分が取れていません: ${state.sessions.why}` }));
   }
   for (const b of state?.broken ?? []) {
     rows.push(el('div', { class: 'alert bad' }, [
@@ -668,7 +620,7 @@ function renderStage() {
   if (list.length === 0) {
     current = null;
     lastSheetId = null;
-    paint(slot, `empty|${JSON.stringify([state.sessions, (state.theirs ?? []).length, (state.closed ?? []).length, state.tasks, state.demo])}`,
+    paint(slot, `empty|${JSON.stringify([(state.theirs ?? []).length, (state.closed ?? []).length, state.tasks, state.demo])}`,
       () => clearStage(state, api));
     return;
   }
@@ -677,19 +629,16 @@ function renderStage() {
   // 出した紙は「目を通した」扱いにする。読んだものを係が
   // 「新しくおもちしました」と言い続けると、どれが新着か分からなくなる
   markSeen(entry.id);
-  // セッションは生IDではなく名前で出す。棚では名前なので、同じものだと分かるように
-  const named = (state.sessions?.sessions ?? []).find((s) => s.sessionId === entry.session);
-
   // 同じ紙が同じ中身のまま届いたら、そのまま置いておく。作り直すと
   // 入れ替えのアニメーションが走って瞬き、書きかけの文章の見え方も乱れる
-  const sig = JSON.stringify([entry, named?.name ?? null]);
+  const sig = JSON.stringify(entry);
   if (current && slot.dataset.sig === sig && slot.firstChild === current.node) return;
 
   // 入れ替えたことを見せるのは、本当に別の紙になったときだけ
   const swapped = lastSheetId !== entry.id;
   lastSheetId = entry.id;
   slot.dataset.sig = sig;
-  current = sheet(entry, api, named?.name ?? null, { swapped });
+  current = sheet(entry, api, { swapped });
   slot.replaceChildren(current.node);
 }
 
