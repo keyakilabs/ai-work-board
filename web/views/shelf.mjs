@@ -15,7 +15,7 @@ export const TABS = [
   { id: 'tasks', label: 'タスク', key: 't' },
   { id: 'theirs', label: 'Claude の番', key: 'c' },
   { id: 'now', label: 'セッション', key: 'n' },
-  { id: 'closed', label: '片付いた', key: 'a' },
+  { id: 'closed', label: '片付いた', key: 'a', noCount: true },
   { id: 'new', label: 'スレッドを立てる', key: 'i', noCount: true },
 ];
 
