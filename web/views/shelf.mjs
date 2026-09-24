@@ -5,7 +5,7 @@
  * 開いたときだけオーバーレイで出て、Esc で閉じる。受付の邪魔をさせない。
  */
 
-import { el, chip, text, ago, waited, unknown, veil, entrySource, enterGuard, factSource } from '../ui.mjs';
+import { el, chip, text, ago, waited, entrySource, enterGuard } from '../ui.mjs';
 
 /**
  * 帯に並ぶ名前は短く。長くすると帯が2段に割れて、受付の紙が押し下げられる。
@@ -14,20 +14,11 @@ import { el, chip, text, ago, waited, unknown, veil, entrySource, enterGuard, fa
 export const TABS = [
   { id: 'tasks', label: 'タスク', key: 't' },
   { id: 'theirs', label: 'Claude の番', key: 'c' },
-  { id: 'now', label: 'セッション', key: 'n' },
   { id: 'closed', label: '片付いた', key: 'a', noCount: true },
   { id: 'new', label: 'スレッドを立てる', key: 'i', noCount: true },
 ];
 
 const KIND_CLASS = { decision: 'kind-decision', confirm: 'kind-confirm', action: 'kind-action', fyi: 'kind-fyi' };
-const STATUS_JA = { waiting: 'あなたを待っている', busy: '作業中', idle: '手が空いている' };
-const WAITING_JA = {
-  'permission prompt': 'あなたの許可を待っている',
-  'input needed': 'あなたの返事を待っている',
-  'sandbox request': 'サンドボックスの許可を待っている',
-  'worker request': 'ワーカーの許可を待っている',
-  'dialog open': 'ダイアログが開いたまま',
-};
 
 function empty(msg) {
   return el('div', { class: 'item soft' }, [text('text', msg)]);
@@ -156,58 +147,6 @@ function theirsTab(state, api) {
   return items.length ? items : [empty('いま Claude が動いているものはありません')];
 }
 
-/* ── いまの作業（セッションから自動で拾う） ── */
-
-function autoNow(s, api) {
-  const waitingNow = s.status === 'waiting' || s.state === 'blocked';
-  const label = s.waitingFor ? (WAITING_JA[s.waitingFor] ?? s.waitingFor) : (STATUS_JA[s.status] ?? s.status);
-
-  return el('div', { class: 'item soft' }, [
-    el('h3', {}, [s.name ? document.createTextNode(s.name) : unknown('セッション名が取れない')]),
-    el('div', { class: 'meta' }, [
-      el('span', {
-        class: 'chip soft',
-        title: '板のファイルではなく、動いているセッションから自動で拾った行です',
-        text: '自動',
-      }),
-      s.status ? chip(label, waitingNow ? 'wait' : s.status === 'busy' ? 'go' : '') : unknown('状態が取れない'),
-      s.cwd ? el('span', { class: 'chip soft', text: s.cwd.replace(/^.*\/(?=[^/]+\/?[^/]*$)/, '…/') }) : null,
-    ]),
-    s.lastPrompt
-      ? veil('直近の指示', s.lastPrompt)
-      : text('text', `直近の指示: 不明（${s.lastPromptWhy || '取れなかった'}）`),
-    el('div', { class: 'actions' }, [
-      el('button', {
-        class: 'quiet', type: 'button', text: 'このセッションを開くコマンドをコピー',
-        onclick: (ev) => api.copyResume(s, ev.currentTarget),
-      }),
-    ]),
-    factSource([
-      ['状態・作業場所', s.source?.state ?? 'claude agents --json'],
-      ['セッションID', s.sessionId],
-      s.pid ? ['プロセス', `pid ${s.pid}`] : null,
-      s.source?.prompt
-        ? ['直近の指示', `${s.source.prompt} の末尾 ${Math.round((s.source.tailBytes ?? 0) / 1024)}KB`]
-        : (s.lastPrompt
-          ? ['直近の指示', 'このセッションから直接（ログの場所は特定できず）']
-          : ['直近の指示', 'ログが見つからないので取れていません']),
-    ]),
-  ]);
-}
-
-function nowTab(state, api) {
-  const ses = state.sessions ?? {};
-  if (!ses.available) {
-    return [el('div', { class: 'item soft' }, [
-      el('h3', {}, [unknown('動いているセッションが取れない')]),
-      text('text', ses.why || ''),
-      factSource([['叩いたコマンド', ses.command ?? 'claude agents --json']]),
-    ])];
-  }
-  const list = ses.sessions ?? [];
-  return list.length ? list.map((x) => autoNow(x, api)) : [empty('動いているセッションはありません')];
-}
-
 /* ── 片付いたもの ───────────────────────── */
 
 const STATUS_LABEL = { closed: '完了', withdrawn: '取り下げ' };
@@ -325,12 +264,11 @@ function newTab(state, api) {
   ].filter(Boolean);
 }
 
-const BUILD = { tasks: tasksTab, theirs: theirsTab, now: nowTab, closed: closedTab, new: newTab };
+const BUILD = { tasks: tasksTab, theirs: theirsTab, closed: closedTab, new: newTab };
 
 const NOTE = {
   tasks: '未着手・着手中・完了。完了は直近7日ぶんだけ出しています',
   theirs: 'Claude の番のもの。あなたは手を離してよい — 答え終わったものと、こちらから渡したものが並びます',
-  now: 'いま動いている Claude Code のセッション。板のファイルではなく、自動で拾っています',
   closed: '片付いたもの（完了・取り下げ）。押し間違えてもここから受付に戻せます（新しい順）',
   new: '',
 };
@@ -372,7 +310,6 @@ export function help(api, state = {}) {
     ['Esc', '入力欄から手を離す（もう一度で閉じる）'],
     ['t', 'タスクを開く'],
     ['c', '「Claude の番」を開く'],
-    ['n', '動いているセッションを開く'],
     ['a', '片付いたものを開く'],
     ['i', 'Claude とのスレッドを立てる'],
     ['u', '最後に回答したものを受付に戻す'],

@@ -36,10 +36,6 @@ export function chip(text, cls = '') {
   return el('span', { class: `chip${cls ? ` ${cls}` : ''}`, text });
 }
 
-export function unknown(why) {
-  return el('span', { class: 'unknown', text: why ? `不明（${why}）` : '不明' });
-}
-
 /**
  * 本文。
  *
@@ -161,29 +157,6 @@ export function waited(iso) {
   return `${Math.floor(h / 24)}日待ち`;
 }
 
-/**
- * 伏せ字のブロック。クリックで開く。
- * 直近の指示には業務の中身が入るので、既定では見せない。
- */
-export function veil(label, body) {
-  if (!body) return null;
-  const n = el('div', {
-    class: 'veil', role: 'button', tabindex: '0',
-    title: '画面共有やスクリーンショットで漏れないよう、既定では伏せています',
-    text: `${label}（伏せています・クリックで表示）`,
-  });
-  const show = () => {
-    if (n.classList.contains('shown')) return;
-    n.classList.add('shown');
-    n.textContent = body;
-  };
-  n.addEventListener('click', show);
-  n.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); }
-  });
-  return n;
-}
-
 /* ── 出どころ ─────────────────────────────────
  * 「板の正本は md であって画面は窓にすぎない」と言っている以上、その md を
  * 実際に開けないと、ただの主張になる。常時は畳むが、いつでも開ける。
@@ -248,15 +221,4 @@ export function entrySource(entry, api) {
     const { path: p, text: raw } = await api.raw(q);
     return [pathRow(p ?? ''), el('pre', { class: 'raw', text: raw ?? '' })];
   });
-}
-
-/** 板の外から拾ってきた値の出どころ。何を根拠に出しているかを明かす。 */
-export function factSource(rows) {
-  const items = rows.filter(Boolean);
-  if (items.length === 0) return null;
-  return disclosure('この行の出どころ', async () => items.map(([what, from]) => el('div', { class: 'src-note' }, [
-    el('span', { class: 'src-what', text: what }),
-    el('code', { text: from }),
-    el('button', { class: 'tiny', type: 'button', text: 'コピー', onclick: (e) => copy(from, e.target) }),
-  ])));
 }

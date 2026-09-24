@@ -124,34 +124,3 @@ export function demoBoard() {
     },
   };
 }
-
-export function demoSessions() {
-  return {
-    available: true,
-    why: '',
-    command: 'claude agents --json',
-    sessions: [
-      {
-        sessionId: 'demo-a', name: 'billing-rounding', cwd: '/Users/you/repos/billing',
-        status: 'waiting', state: 'blocked', waitingFor: 'input needed', pid: 12345,
-        startedAt: Date.now() - 60 * 60000, rank: 0,
-        lastPrompt: '請求の明細をテストで固めてから合計を直して', lastPromptWhy: '',
-        source: { state: 'claude agents --json', prompt: null, tailBytes: 262144 },
-      },
-      {
-        sessionId: 'demo-b', name: 'forms-intake', cwd: '/Users/you/repos/forms',
-        status: 'busy', state: 'working', waitingFor: null, pid: 12346,
-        startedAt: Date.now() - 25 * 60000, rank: 1,
-        lastPrompt: '古い連携APIの利用状況を調べて', lastPromptWhy: '',
-        source: { state: 'claude agents --json', prompt: null, tailBytes: 262144 },
-      },
-      {
-        sessionId: 'demo-c', name: 'blog-draft', cwd: '/Users/you/work',
-        status: 'idle', state: 'done', waitingFor: null, pid: 12347,
-        startedAt: Date.now() - 180 * 60000, rank: 2,
-        lastPrompt: null, lastPromptWhy: 'ログの末尾に直近の指示が残っていない',
-        source: { state: 'claude agents --json', prompt: null, tailBytes: 262144 },
-      },
-    ],
-  };
-}

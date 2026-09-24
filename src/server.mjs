@@ -18,11 +18,10 @@ import {
   ensureBoard, boardPaths,
   mayReadFromBoard,
 } from './board.mjs';
-import { collectSessions } from './sessions.mjs';
 import {
   CSRF_HEADER, newToken, tokensMatch, hostIsOurs, originIsOurs, isSafeEntryId, safeWebPath, isInside,
 } from './security.mjs';
-import { demoBoard, demoSessions } from './demo.mjs';
+import { demoBoard } from './demo.mjs';
 
 const WEB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web');
 
@@ -116,14 +115,14 @@ export async function createServer(opts = {}) {
   if (!demo) await ensureBoard(workspace);
 
   async function snapshot() {
-    if (demo) return { ...demoBoard(), sessions: demoSessions(), demo: true, workspace: '(demo)' };
+    if (demo) return { ...demoBoard(), demo: true, workspace: '(demo)' };
     const items = await readItems(workspace);
     const grouped = groupForBoard(items);
-    const [sessions, closed, tasks] = await Promise.all([
-      collectSessions(), readClosed(workspace), readTasks(workspace),
+    const [closed, tasks] = await Promise.all([
+      readClosed(workspace), readTasks(workspace),
     ]);
     return {
-      ...grouped, closed, tasks, sessions,
+      ...grouped, closed, tasks,
       demo: false, workspace,
       boardDir: boardPaths(workspace).root,
       // 古い置き場（.claude/board/）のままだと Claude が板に書けない。

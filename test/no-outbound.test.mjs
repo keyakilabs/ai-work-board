@@ -32,10 +32,9 @@ const MAY_WRITE = new Set(['src/board.mjs', 'src/server.mjs', 'src/setup.mjs']);
  *
  * `execFile('curl', …)` や `spawn('open', <URL>)` は、このリポジトリの
  * どの通信検査にも掛からずに外へ出られる。`open` に至っては利用者の
- * ブラウザで任意の URL を開ける。実際に2箇所で使っているので、
- * 禁止ではなく「ここだけ」に閉じる。
+ * ブラウザで任意の URL を開ける。画面を開く1箇所だけに閉じる。
  */
-const MAY_SPAWN = new Set(['src/sessions.mjs', 'bin/ai-work-board.mjs']);
+const MAY_SPAWN = new Set(['bin/ai-work-board.mjs']);
 
 /**
  * 書き込み系のAPI。同期版（*Sync）も必ず拾う。

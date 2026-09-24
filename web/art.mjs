@@ -162,11 +162,6 @@ const ICONS = {
     <rect class="filled-mark thin" x="41" y="15" width="12" height="8" rx="1.5"/>
     <rect class="paper thin" x="11" y="28" width="12" height="8" rx="1.5"/>
     <rect class="paper thin" x="26" y="28" width="12" height="8" rx="1.5"/>`,
-  seats: `
-    <circle class="body" cx="18" cy="19" r="7"/>
-    <circle class="body" cx="46" cy="19" r="7"/>
-    <path d="M6 33h24M9 33v16M27 33v16"/>
-    <path d="M34 33h24M37 33v16M55 33v16"/>`,
   pen: `
     <path class="paper" d="M14 8h22l12 12v9"/>
     <path d="M36 8v12h12"/>
