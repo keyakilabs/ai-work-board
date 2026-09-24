@@ -91,7 +91,7 @@ export function mood(state, { connected = true } = {}) {
   if (fresh.length > 1) {
     return {
       pose: 'bundle',
-      line: `新しいスレッドを${fresh.length}件おもちしました`,
+      line: `スレッドの通知が${fresh.length}件あります`,
       sub: total ? `${total}。上から順に読めます` : '上から順に読めます',
       act: fresh[0].id,
     };
@@ -99,7 +99,7 @@ export function mood(state, { connected = true } = {}) {
   if (fresh.length === 1) {
     return {
       pose: 'deliver',
-      line: '新しいスレッドをおもちしました',
+      line: 'スレッドの通知が1件あります',
       sub: total ?? `Claude から「${short(fresh[0].title)}」`,
       act: fresh[0].id,
     };
