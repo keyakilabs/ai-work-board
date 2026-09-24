@@ -462,7 +462,7 @@ export function shelfCount(st, id) {
  */
 const RACK = [
   {
-    label: '依頼',
+    label: 'スレッド',
     items: [
       {
         id: 'inbox', icon: 'tray-in', label: '受付',
@@ -476,7 +476,7 @@ const RACK = [
       { id: 'closed', icon: 'box-done' },
     ],
   },
-  // タスクとセッションは「依頼」とも互いとも別のもの。同じまとまりに
+  // タスクとセッションは「スレッド」とも互いとも別のもの。同じまとまりに
   // 入れると、レールが何の一覧なのか読めなくなる
   {
     label: 'タスク',

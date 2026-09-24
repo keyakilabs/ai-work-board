@@ -856,7 +856,7 @@ button.carry { margin-top: 10px; }
   * { transition: none !important; animation: none !important; }
 }
 
-/* ───────────── 依頼の種類・優先度 ─────────────
+/* ───────────── スレッドの種類・優先度 ─────────────
  * 種類は言葉（判断・確認・作業依頼・共有）がそのまま出ているので、
  * 色で分けない。4色使うと、札そのものが読む対象になる。
  * 色を使うのは「至急」だけ — 塗りつぶしの札は画面にこれ1つなので、
@@ -909,7 +909,7 @@ button.toggle.on .tick {
 }
 button.toggle:hover .tick { border-color: var(--go); }
 
-/* 依頼を出すときの種類選び */
+/* スレッドを立てるときの種類選び */
 .picker { display: flex; gap: 5px; flex-wrap: wrap; }
 button.pick {
   font: inherit; font-size: 12.5px; cursor: pointer;

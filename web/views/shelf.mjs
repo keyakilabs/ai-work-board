@@ -16,7 +16,7 @@ export const TABS = [
   { id: 'theirs', label: 'Claude の番', key: 'c' },
   { id: 'now', label: 'セッション', key: 'n' },
   { id: 'closed', label: '片付いた', key: 'a' },
-  { id: 'new', label: '依頼を出す', key: 'i', noCount: true },
+  { id: 'new', label: 'スレッドを立てる', key: 'i', noCount: true },
 ];
 
 const KIND_CLASS = { decision: 'kind-decision', confirm: 'kind-confirm', action: 'kind-action', fyi: 'kind-fyi' };
@@ -33,10 +33,10 @@ function empty(msg) {
   return el('div', { class: 'item soft' }, [text('text', msg)]);
 }
 
-/** 依頼1件の札（種類・至急・PJ）。受付の紙と同じ読み方になるよう揃える。 */
+/** スレッド1件の札（種類・至急・PJ）。受付の紙と同じ読み方になるよう揃える。 */
 function itemChips(e, extra = []) {
   return el('div', { class: 'meta' }, [
-    chip(e.kindLabel ?? '依頼', KIND_CLASS[e.kind] ?? ''),
+    chip(e.kindLabel ?? 'スレッド', KIND_CLASS[e.kind] ?? ''),
     e.priority === 'high' ? chip('至急', 'urgent') : null,
     e.project ? chip(e.project) : null,
     ...extra,
@@ -238,7 +238,7 @@ function closedTab(state, api) {
   return items.length ? items : [empty('まだ片付いたものはありません')];
 }
 
-/* ── 依頼を出す ───────────────────────────── */
+/* ── スレッドを立てる ───────────────────────────── */
 
 /**
  * 書きかけを預ける入力欄。
@@ -283,14 +283,14 @@ function newTab(state, api) {
     return b;
   }));
 
-  const title = keeping(el('input', { type: 'text', placeholder: '依頼を一行で', 'aria-label': '依頼' }), 'draft:new:title', api);
+  const title = keeping(el('input', { type: 'text', placeholder: '見出しを一行で', 'aria-label': 'スレッドの見出し' }), 'draft:new:title', api);
   const body = keeping(el('textarea', { rows: '3', placeholder: '補足（なくてもいい）', 'aria-label': '補足' }), 'draft:new:body', api);
   // 「板に置く」は、押す前に何が起きるか読めない。送ることを書く
   const send = el('button', { class: 'go', type: 'button', text: 'Claude に渡す' });
 
   const submit = async () => {
     const t = title.value.trim();
-    if (!t) { title.focus(); api.toast('依頼を一行で書いてください'); return; }
+    if (!t) { title.focus(); api.toast('見出しを一行で書いてください'); return; }
     send.disabled = true;
     // 送る「前」に手元を空にする。再描画は post の途中でも起きるので、
     // あとで消すと書いた文字が戻ってきて、二重投稿の原因になる
@@ -364,8 +364,8 @@ export function shelf(tabId, state, api) {
 /** 使い方。`?` で開く。 */
 export function help(api, state = {}) {
   const rows = [
-    ['j / →', '次の依頼'],
-    ['k / ←', '前の依頼'],
+    ['j / →', '次のスレッド'],
+    ['k / ←', '前のスレッド'],
     ['1…9', 'その番号の選択肢で回答する'],
     ['r', 'コメント欄へ（reply）'],
     ['⌘Enter', '書いた内容を送る'],
@@ -374,7 +374,7 @@ export function help(api, state = {}) {
     ['c', '「Claude の番」を開く'],
     ['n', '動いているセッションを開く'],
     ['a', '片付いたものを開く'],
-    ['i', 'Claude に依頼を出す'],
+    ['i', 'Claude にスレッドを立てる'],
     ['u', '最後に回答したものを受付に戻す'],
     ['?', 'この画面'],
   ];
@@ -392,8 +392,8 @@ export function help(api, state = {}) {
     ]),
     el('div', { class: 'shelf-body' }, [
       el('div', { class: 'howto' }, [
-        text('p', 'Claude からの依頼が1件ずつ「受付」に出ます。回答すると「Claude の番」に移り、受付から外れます。'),
-        text('p', '依頼は4つの種類に分かれます — 判断（決めてほしい）／確認（これでいいか見てほしい）／作業依頼（人にしかできない操作をしてほしい）／共有（報告。返事は要らない）。'),
+        text('p', 'Claude からのスレッドが1件ずつ「受付」に出ます。回答すると「Claude の番」に移り、受付から外れます。'),
+        text('p', 'スレッドは4つの種類に分かれます — 判断（決めてほしい）／確認（これでいいか見てほしい）／作業依頼（人にしかできない操作をしてほしい）／共有（報告。返事は要らない）。'),
         text('p', '**回答しても完了にはなりません。** Claude が動いた結果を見てから「完了にする」を押す形です。そのぶん「答えたのに直っていなかった」を取りこぼしません。その場で終わらせたいときは、回答欄の「この回答で完了にする」にチェックを入れてから送ってください。'),
         text('p', '選択肢は押した瞬間に回答になります。書きかけのコメントも一緒に送られます。押し間違えても「Claude の番」からいつでも受付に戻せます。'),
         text('p', 'タスクは未着手・着手中・完了の3列。Claude も人も同じファイル（.claude/board/tasks/）を動かします。'),

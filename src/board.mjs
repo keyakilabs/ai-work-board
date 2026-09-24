@@ -4,14 +4,14 @@
  * 仕組みは社内で実運用しているデスクをそのまま踏襲している。あちらは実運用で
  * 200件以上を捌いていて、語彙も状態遷移も現場で削られたものなので、
  * こちらで作り直す理由が無い。変えたのは置き場所（`.board/` に
- * 依頼もタスクもまとめる）と、画面の作りだけ。
+ * スレッドもタスクもまとめる）と、画面の作りだけ。
  *
  *   .board/
- *   ├── items/*.md            依頼（あなた ⇄ Claude）
- *   ├── closed/*.md           片付いた依頼
+ *   ├── items/*.md            スレッド（あなた ⇄ Claude）
+ *   ├── closed/*.md           片付いたスレッド
  *   └── tasks/{inbox,doing,done}/*.md   タスク
  *
- * 依頼は1件1ファイルの Markdown。frontmatter の値は
+ * スレッドは1件1ファイルの Markdown。frontmatter の値は
  * 「JSON として読めれば JSON、読めなければ文字列」。
  * 本文のあとに `<!-- reply {who} {at} -->` 区切りで会話を追記していく。
  */
@@ -20,7 +20,7 @@ import fsSync, { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
-/** 依頼の種類。desk と同じ4つ。 */
+/** スレッドの種類。desk と同じ4つ。 */
 export const KINDS = {
   decision: '判断',
   confirm: '確認',
@@ -143,7 +143,7 @@ function formatValue(v) {
 const REPLY_SPLIT = /^<!-- reply (\S+) (\S+) -->[ \t]*$/m;
 
 /**
- * 依頼1件を読む。壊れていても例外にしない。
+ * スレッド1件を読む。壊れていても例外にしない。
  * 板は人も Claude も手で書くので、1枚壊れただけで板が落ちるのは最悪の壊れ方。
  */
 export function parseItem(text, id) {
@@ -193,7 +193,7 @@ export function parseItem(text, id) {
   };
 }
 
-/** 依頼1件を md に戻す。会話はそのまま積み直す。 */
+/** スレッド1件を md に戻す。会話はそのまま積み直す。 */
 export function stringifyItem(item) {
   const lines = ['---'];
   for (const k of FM_KEYS) {
@@ -299,7 +299,7 @@ async function reserve(p, base) {
       if (e?.code !== 'EEXIST') throw e;
     }
   }
-  throw new Error('同じ名前の依頼が多すぎて置き場所を決められない');
+  throw new Error('同じ名前のスレッドが多すぎて置き場所を決められない');
 }
 
 /* ── 読み取り ───────────────────────────────── */
@@ -489,13 +489,13 @@ export async function createTask(workspace, { title, body = '', lane = 'inbox' }
   return { id, lane, file };
 }
 
-/* ── 依頼の操作 ───────────────────────────── */
+/* ── スレッドの操作 ───────────────────────────── */
 
 /**
- * 依頼を立てる。
+ * スレッドを立てる。
  *
  * `status` の既定は `open`（あなた待ち）。Claude が聞いてくる形がこれ。
- * 逆に**あなたから Claude に出す依頼**は、出した時点で向こうの番なので
+ * 逆に**あなたから Claude に出すスレッド**は、出した時点で向こうの番なので
  * `answered` で立てる。自分が出したものを自分が待つ形にしない。
  */
 export async function createItem(workspace, {
@@ -532,7 +532,7 @@ async function loadItem(workspace, id) {
       return { file, where, item: { ...parseItem(await fs.readFile(file, 'utf8'), id), where } };
     } catch { /* 次を探す */ }
   }
-  const e = new Error('その依頼は見つかりません');
+  const e = new Error('そのスレッドは見つかりません');
   e.code = 'ENOENT';
   throw e;
 }
@@ -554,7 +554,7 @@ async function saveTo(workspace, item, dir, id) {
 export async function answerItem(workspace, id, answer, { close = false, who = 'you' } = {}) {
   const p = await ensureBoard(workspace);
   const { file, item } = await loadItem(workspace, id);
-  if (item.where === 'closed') throw new Error('片付いた依頼には答えられません');
+  if (item.where === 'closed') throw new Error('片付いたスレッドには答えられません');
 
   const now = stamp();
   item.replies = [...(item.replies ?? []), { who, at: now, text: String(answer ?? '') }];

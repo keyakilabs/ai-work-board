@@ -91,7 +91,7 @@ export function mood(state, { connected = true } = {}) {
   if (fresh.length > 1) {
     return {
       pose: 'bundle',
-      line: `新しい依頼を${fresh.length}件おもちしました`,
+      line: `新しいスレッドを${fresh.length}件おもちしました`,
       sub: total ? `${total}。上から順に読めます` : '上から順に読めます',
       act: fresh[0].id,
     };
@@ -99,7 +99,7 @@ export function mood(state, { connected = true } = {}) {
   if (fresh.length === 1) {
     return {
       pose: 'deliver',
-      line: '新しい依頼をおもちしました',
+      line: '新しいスレッドをおもちしました',
       sub: total ?? `Claude から「${short(fresh[0].title)}」`,
       act: fresh[0].id,
     };
@@ -151,7 +151,7 @@ export function bot(state, api, { connected = true, cursorId = null } = {}) {
   // いま開いている紙を指しているなら、それは「連れていく先」ではない。
   // 押しても何も起きない見た目のままだと、飾りを押しただけに見える（M-3）
   const act = spec.act && spec.act !== cursorId ? spec.act : null;
-  const cta = act ? 'その依頼を開く' : (spec.go ? '一覧を開く' : null);
+  const cta = act ? 'そのスレッドを開く' : (spec.go ? '一覧を開く' : null);
 
   const figure = bodyArt(spec.pose);
   if (flying > 0) figure.classList.add('away');

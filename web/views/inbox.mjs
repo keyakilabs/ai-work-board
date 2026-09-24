@@ -197,9 +197,9 @@ export function sheet(item, api, sessionName = null, { swapped = true } = {}) {
 
   const scroll = el('div', { class: 'sheet-scroll' }, [
     el('div', { class: 'kicker' }, [
-      chip(item.kindLabel ?? '依頼', KIND_CLASS[item.kind] ?? ''),
+      chip(item.kindLabel ?? 'スレッド', KIND_CLASS[item.kind] ?? ''),
       item.priority === 'high' ? chip('至急', 'urgent') : null,
-      // 新しい依頼と、こちらが答えたあとの返信は、読み方がまったく違う
+      // 新しいスレッドと、こちらが答えたあとの返信は、読み方がまったく違う
       (item.replies ?? []).at(-1)?.who === 'claude' && (item.replies ?? []).length > 1
         ? chip('返信あり', 'me') : null,
       w ? chip(w, 'wait') : null,
@@ -275,7 +275,7 @@ export function clearStage(state, api) {
     : null);
 
   // 「板が空」が信じられる状態かを、この画面で切り分けられるようにする。
-  // Claude が一度も書いていないなら、依頼が無いのではなく設定が効いていない
+  // Claude が一度も書いていないなら、スレッドが無いのではなく設定が効いていない
   const everWrote = (state.theirs ?? []).some((e) => e.from === 'claude')
     || (state.closed ?? []).some((e) => e.from === 'claude')
     || (state.tasks?.lanes ?? []).some((l) => l.tasks.length > 0);
@@ -288,17 +288,17 @@ export function clearStage(state, api) {
         ? `ただし、ターミナル側で入力待ちのセッションが${waitingOnes.length}本あります。板に出てこない質問はそちらにあります。`
         : (busyOnes.length
           ? 'Claude が作業を続けています。聞きたいことができたら、ここに出ます。'
-          : 'Claude から新しい依頼が来ると、ここに出ます。'),
+          : 'Claude から新しいスレッドが来ると、ここに出ます。'),
     }),
     group('ターミナルで入力待ち', waitingOnes),
     group('作業中', busyOnes),
     !state.demo && !everWrote
       ? el('div', { class: 'setup-hint' }, [
         el('div', { text: 'Claude がこの板にまだ一度も書いていません。' }),
-        el('div', { text: '依頼が無いのか、設定がまだなのか分かれるところなので、確かめてください:' }),
+        el('div', { text: 'スレッドが無いのか、設定がまだなのか分かれるところなので、確かめてください:' }),
         el('code', { text: 'templates/CLAUDE.board.md を自分の CLAUDE.md に貼るか @ で読み込ませる' }),
       ])
       : null,
-    el('button', { class: 'quiet', type: 'button', text: 'Claude に依頼を出す', onclick: () => api.openShelf('new') }),
+    el('button', { class: 'quiet', type: 'button', text: 'Claude にスレッドを立てる', onclick: () => api.openShelf('new') }),
   ]);
 }
