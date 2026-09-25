@@ -172,6 +172,25 @@ test('closed/ に居ても status が open なら、受付に出る', async () =
   assert.deepEqual(g.done.map((x) => x.id), [], '開いているのに片付いた扱いになっている');
 });
 
+test('答えられるかどうかも、置き場ではなく status で決める', async () => {
+  // 棚を混ぜたことで「closed/ に居るのに開いている紙」が受付に出るようになった。
+  // 置き場で弾いていると、受付に出ているのに答えられない袋小路になる
+  const w = await ws();
+  const p = boardPaths(w);
+  await fs.mkdir(p.items, { recursive: true });
+  await fs.mkdir(p.closed, { recursive: true });
+  await fs.writeFile(path.join(p.closed, 'revived.md'),
+    '---\nid: revived\nkind: confirm\ntitle: 棚から戻したい\nstatus: open\n---\n\n本文\n', 'utf8');
+  await fs.writeFile(path.join(p.items, 'stuck.md'),
+    '---\nid: stuck\nkind: confirm\ntitle: 閉じている\nstatus: closed\nclosed_at: 2026-09-24T10:00:00+09:00\n---\n\n本文\n', 'utf8');
+
+  // closed/ に居ても status が open なら答えられる
+  await answerItem(w, 'revived', 'これで');
+
+  // items/ に居ても status が closed なら答えられない
+  await assert.rejects(() => answerItem(w, 'stuck', 'あとから'), /片付いた/);
+});
+
 test('「この回答で完了にする」を立てると、回答と同時に片付く', async () => {
   const w = await ws();
   const { id } = await createItem(w, { kind: 'confirm', title: 'これでいい？' });

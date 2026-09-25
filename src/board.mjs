@@ -363,11 +363,18 @@ export async function readItems(workspace) {
   return readDir(p.items, 'items');
 }
 
-/** 片付いたものは、片付いた順に新しいものから。 */
+/**
+ * 片付いたものは、片付いた順に新しいものから。
+ *
+ * 並べる鍵に `created` まで降りるのが要。`closed_at` も `updated` も無い紙
+ * （`status:` の行だけ書き換えたもの）は鍵が空になり、40件で切るところで
+ * **黙って消えていた** — 受付に居座るよりたちが悪い（2026-09-24 レビュー指摘）。
+ */
 export function sortClosed(items, limit = 40) {
+  const when = (e) => String(e.closed_at || e.updated || e.created || '');
   return items
     .filter((e) => !e.broken)
-    .sort((a, b) => String(b.closed_at || b.updated || '').localeCompare(String(a.closed_at || a.updated || '')))
+    .sort((a, b) => when(b).localeCompare(when(a)))
     .slice(0, limit);
 }
 
@@ -392,8 +399,9 @@ export function isDone(item) {
  * 画面が使う形に束ねる。
  *
  * `done` は「`items/` に居るが閉じている紙」。呼ぶ側が `closed` に混ぜる。
- * 次に何か操作すれば置き場も直るので、ここで動かしはしない（読むだけの口が
- * 書き込むと、読んだだけで盤面が変わることになる）。
+ * ここで `closed/` へ動かしはしない — 読むだけの口が書き込むと、読んだだけで
+ * 盤面が変わることになる。置き場が揃わないまま残ることは許す（状態は `status`
+ * が持っているので、揃っていなくても画面は正しい）。
  */
 export function groupForBoard(items) {
   const broken = items.filter((e) => e.broken);

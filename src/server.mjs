@@ -122,14 +122,25 @@ export async function createServer(opts = {}) {
      * `items/` と `closed/` は棚で、`closed/` は「もう読まなくていいものの置き場」。
      * だから2つを混ぜてから `status` で分ける — `items/` に居るのに閉じている紙
      * （Claude が動かし忘れたもの）も片付いたに出るし、`closed/` に居るのに
-     * 開いている紙も受付に出る。置き場は次の書き込みのときに揃う。
+     * 開いている紙も受付に出る。
+     *
+     * 棚の奥ぶんも全部渡す（`readClosed` の既定の40件は「画面に出す数」で、
+     * 状態の判定に使うと `closed/` に居る開いた紙を取りこぼす）。
+     * 読む量は変わらない — `readDir` はどちらにしても全ファイルを読んでいる。
      */
-    // 棚の奥ぶんも全部渡す（`readClosed` の既定の40件は「画面に出す数」なので、
-    // ここで切ると `closed/` に居る開いた紙を取りこぼす）
     const [live, shelved, tasks] = await Promise.all([
       readItems(workspace), readClosed(workspace, Infinity), readTasks(workspace),
     ]);
-    const { done, ...grouped } = groupForBoard([...live, ...shelved]);
+    /*
+     * 同じ id が両方にあったら `items/` を採る。
+     *
+     * 移動は「置く」→「消す」の2手なので、その間に落ちると両方に残る。
+     * 混ぜる前は別の一覧に出ていたので気づけたが、混ぜたあとは同じ一覧に
+     * 同じ id が2枚並び、カーソルがどちらを指しているか分からなくなる。
+     */
+    const byId = new Map(shelved.map((e) => [e.id, e]));
+    for (const e of live) byId.set(e.id, e);
+    const { done, ...grouped } = groupForBoard([...byId.values()]);
     return {
       ...grouped, closed: sortClosed(done), tasks,
       demo: false, workspace,
