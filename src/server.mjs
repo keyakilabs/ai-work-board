@@ -13,7 +13,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 import {
-  readItems, readClosed, readTasks, readTask, groupForBoard,
+  readItems, readClosed, readTasks, readTask, groupForBoard, sortClosed,
   createItem, answerItem, closeItem, reopenItem, createTask, moveTask,
   ensureBoard, boardPaths,
   mayReadFromBoard,
@@ -116,13 +116,22 @@ export async function createServer(opts = {}) {
 
   async function snapshot() {
     if (demo) return { ...demoBoard(), demo: true, workspace: '(demo)' };
-    const items = await readItems(workspace);
-    const grouped = groupForBoard(items);
-    const [closed, tasks] = await Promise.all([
-      readClosed(workspace), readTasks(workspace),
+    /*
+     * 状態を決めるのは frontmatter の `status` だけ。**置き場は状態ではない。**
+     *
+     * `items/` と `closed/` は棚で、`closed/` は「もう読まなくていいものの置き場」。
+     * だから2つを混ぜてから `status` で分ける — `items/` に居るのに閉じている紙
+     * （Claude が動かし忘れたもの）も片付いたに出るし、`closed/` に居るのに
+     * 開いている紙も受付に出る。置き場は次の書き込みのときに揃う。
+     */
+    // 棚の奥ぶんも全部渡す（`readClosed` の既定の40件は「画面に出す数」なので、
+    // ここで切ると `closed/` に居る開いた紙を取りこぼす）
+    const [live, shelved, tasks] = await Promise.all([
+      readItems(workspace), readClosed(workspace, Infinity), readTasks(workspace),
     ]);
+    const { done, ...grouped } = groupForBoard([...live, ...shelved]);
     return {
-      ...grouped, closed, tasks,
+      ...grouped, closed: sortClosed(done), tasks,
       demo: false, workspace,
       boardDir: boardPaths(workspace).root,
       // 古い置き場（.claude/board/）のままだと Claude が板に書けない。

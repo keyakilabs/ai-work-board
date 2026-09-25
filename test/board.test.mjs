@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
-  parseItem, stringifyItem, createItem, readItems, readClosed, groupForBoard,
+  parseItem, stringifyItem, createItem, readItems, readClosed, groupForBoard, isDone,
   answerItem, closeItem, reopenItem, createTask, moveTask, readTasks,
   newId, stamp, boardPaths, byPriorityThenAge, KINDS, STATUSES,
 } from '../src/board.mjs';
@@ -127,6 +127,49 @@ test('回答すると「Claude 待ち」になる。完了にはならない', a
 
   // 片付いてはいない
   assert.equal((await readClosed(w)).length, 0);
+});
+
+test('items に置いたまま status だけ closed にした紙は、受付に出ない', async () => {
+  // Claude が `closed/` へ動かさずに status だけ書き換えることがある。
+  // 置き場だけを見ていたころは「クローズします」の紙が受付に居座り続けた
+  // （2026-09-24 山下から報告）
+  const w = await ws();
+  const p = boardPaths(w);
+  await fs.mkdir(p.items, { recursive: true });
+  await fs.writeFile(path.join(p.items, 'stuck.md'), [
+    '---', 'id: stuck', 'kind: confirm', 'title: クローズします', 'status: closed',
+    'closed_at: 2026-09-24T10:00:00+09:00', '---', '', '本文', '',
+    '<!-- reply claude 2026-09-24T10:00:00+09:00 -->', '', '直しました。クローズします', '',
+  ].join('\n'), 'utf8');
+  await createItem(w, { kind: 'fyi', title: '生きているスレッド' });
+
+  const items = await readItems(w);
+  assert.equal(items.length, 2, '2件読めていない');
+  assert.equal(isDone(items.find((x) => x.id === 'stuck')), true);
+
+  const g = groupForBoard(items);
+  assert.deepEqual(g.waiting.map((x) => x.title), ['生きているスレッド'], '閉じた紙が受付に居座っている');
+  assert.deepEqual(g.theirs.map((x) => x.title), [], '閉じた紙が「Claude の番」に回っている');
+  assert.deepEqual(g.done.map((x) => x.id), ['stuck'], '片付いた側に回っていない');
+
+  // 取り下げも同じ
+  const withdrawn = items.map((x) => (x.id === 'stuck' ? { ...x, status: 'withdrawn' } : x));
+  assert.equal(groupForBoard(withdrawn).done.length, 1);
+});
+
+test('closed/ に居ても status が open なら、受付に出る', async () => {
+  // 置き場は状態ではない、の裏側。棚の奥の紙を手で open に書き換えたら、
+  // 次に画面を開いた時点で受付に戻っていること
+  const w = await ws();
+  const p = boardPaths(w);
+  await fs.mkdir(p.closed, { recursive: true });
+  await fs.writeFile(path.join(p.closed, 'revived.md'),
+    '---\nid: revived\nkind: decision\ntitle: 棚から戻したい\nstatus: open\n---\n\n本文\n', 'utf8');
+
+  const [live, shelved] = await Promise.all([readItems(w), readClosed(w, Infinity)]);
+  const g = groupForBoard([...live, ...shelved]);
+  assert.deepEqual(g.waiting.map((x) => x.id), ['revived'], '棚の奥の開いた紙が受付に出ていない');
+  assert.deepEqual(g.done.map((x) => x.id), [], '開いているのに片付いた扱いになっている');
 });
 
 test('「この回答で完了にする」を立てると、回答と同時に片付く', async () => {
