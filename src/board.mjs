@@ -363,23 +363,56 @@ export async function readItems(workspace) {
   return readDir(p.items, 'items');
 }
 
-export async function readClosed(workspace, limit = 40) {
-  const p = boardPaths(workspace);
-  return (await readDir(p.closed, 'closed'))
+/**
+ * 片付いたものは、片付いた順に新しいものから。
+ *
+ * 並べる鍵に `created` まで降りるのが要。`closed_at` も `updated` も無い紙
+ * （`status:` の行だけ書き換えたもの）は鍵が空になり、40件で切るところで
+ * **黙って消えていた** — 受付に居座るよりたちが悪い（2026-09-24 レビュー指摘）。
+ */
+export function sortClosed(items, limit = 40) {
+  const when = (e) => String(e.closed_at || e.updated || e.created || '');
+  return items
     .filter((e) => !e.broken)
-    .sort((a, b) => String(b.closed_at || b.updated || '').localeCompare(String(a.closed_at || a.updated || '')))
+    .sort((a, b) => when(b).localeCompare(when(a)))
     .slice(0, limit);
 }
 
-/** 画面が使う形に束ねる。 */
+export async function readClosed(workspace, limit = 40) {
+  const p = boardPaths(workspace);
+  return sortClosed(await readDir(p.closed, 'closed'), limit);
+}
+
+/**
+ * 片付いているか。
+ *
+ * **置き場ではなく `status` で決める。** Claude は `closed/` へ動かさずに
+ * `status` だけ書き換えることがあり、そのときに置き場だけを見ると
+ * 「クローズします」と書かれた紙が受付に居座り続ける（2026-09-24 山下から報告）。
+ * 閉じるのは終わりの宣言なので、言われたとおり閉じる。
+ */
+export function isDone(item) {
+  return item.status === 'closed' || item.status === 'withdrawn';
+}
+
+/**
+ * 画面が使う形に束ねる。
+ *
+ * `done` は「`items/` に居るが閉じている紙」。呼ぶ側が `closed` に混ぜる。
+ * ここで `closed/` へ動かしはしない — 読むだけの口が書き込むと、読んだだけで
+ * 盤面が変わることになる。置き場が揃わないまま残ることは許す（状態は `status`
+ * が持っているので、揃っていなくても画面は正しい）。
+ */
 export function groupForBoard(items) {
   const broken = items.filter((e) => e.broken);
   const ok = items.filter((e) => !e.broken);
+  const live = ok.filter((e) => !isDone(e));
   return {
     // あなた待ち。優先度が高いもの・待たせているものから
-    waiting: ok.filter(isYourTurn).sort(byPriorityThenAge),
+    waiting: live.filter(isYourTurn).sort(byPriorityThenAge),
     // Claude の番。あなたが答えたので、次は向こうが動く
-    theirs: ok.filter((e) => !isYourTurn(e)).sort(byPriorityThenAge),
+    theirs: live.filter((e) => !isYourTurn(e)).sort(byPriorityThenAge),
+    done: ok.filter(isDone),
     broken,
   };
 }
@@ -554,7 +587,7 @@ async function saveTo(workspace, item, dir, id) {
 export async function answerItem(workspace, id, answer, { close = false, who = 'you' } = {}) {
   const p = await ensureBoard(workspace);
   const { file, item } = await loadItem(workspace, id);
-  if (item.where === 'closed') throw new Error('片付いたスレッドには答えられません');
+  if (isDone(item)) throw new Error('片付いたスレッドには答えられません');
 
   const now = stamp();
   item.replies = [...(item.replies ?? []), { who, at: now, text: String(answer ?? '') }];
